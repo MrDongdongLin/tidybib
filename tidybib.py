@@ -15,6 +15,14 @@ proceedings = r"(@proceedings{[\s\S]*?})(?=[ \\\n]*[@%])"
 misc = r"(@misc{[\s\S]*?})(?=[ \\\n]*[@%])"
 article = r"(@article{[\s\S]*?})(?=[ \\\n]*[@%])"
 book = r"(@book{[\s\S]*?})(?=[ \\\n]*[@%])"
+incollection = r"(@incollection{[\s\S]*?})(?=[ \\\n]*[@%])"
+# head of each item
+head_inproceedings = r"(@inproceedings{[\s\S]*?,)(?=[ \\\n]*)"
+head_proceedings = r"(@proceedings{[\s\S]*?,)(?=[ \\\n]*)"
+head_misc = r"(@misc{[\s\S]*?,)(?=[ \\\n]*)"
+head_article = r"(@article{[\s\S]*?,)(?=[ \\\n]*)"
+head_book = r"(@book{[\s\S]*?,)(?=[ \\\n]*)"
+head_incollection = r"(@incollection{[\s\S]*?,)(?=[ \\\n]*)"
 # field patterns
 author = r"(?<!\w)(author[\s\S]*?[}\"],)"
 title = r"(?<!\w)(title[\s\S]*?[}\"],)"
@@ -36,12 +44,6 @@ booktitle = r"(?<!\w)(booktitle[\s\S]*?[}\"],)"
 howpublished = r"(?<!\w)(howpublished[\s\S]*?[}\"],)"
 # extra match
 content = r"(?<=[{\"])([\s\S]*)(?=[}\"])"
-# head of each item
-head_inproceedings = r"(@inproceedings{[\s\S]*?,)(?=[ \\\n]*)"
-head_proceedings = r"(@proceedings{[\s\S]*?,)(?=[ \\\n]*)"
-head_misc = r"(@misc{[\s\S]*?,)(?=[ \\\n]*)"
-head_article = r"(@article{[\s\S]*?,)(?=[ \\\n]*)"
-head_book = r"(@book{[\s\S]*?,)(?=[ \\\n]*)"
 
 # define a regex dictionary contains the field need to be writtern out
 inproceedings_regex = {
@@ -121,8 +123,20 @@ article_regex = {
     "volume": volume,
     "number": number,
     "pages": pages,
-    # "month": month,
     "doi": doi
+}
+
+incollection_regex = {
+    "item": incollection,
+    "head": head_incollection,
+    "content": content,
+
+    # NOTE: the following keys must arrange in a certain order, please DONOT change it!
+    "author": author,
+    "title": title,
+    "booktitle": booktitle,
+    "pages": pages,
+    "year": year
 }
 
 # function field_content returns strings after '=', i.e. the content in '{...}'
@@ -229,8 +243,9 @@ for i in range(len(inpath)):
     numMisc = tidy_item(misc_regex, bibin, fout)
     numBook = tidy_item(book_regex, bibin, fout)
     numArticle = tidy_item(article_regex, bibin, fout)
+    numIncollection = tidy_item(incollection_regex, bibin, fout)
 
-    count = numInproceed + numProceed + numMisc + numBook + numArticle
+    count = numInproceed + numProceed + numMisc + numBook + numArticle + numIncollection
 
     print(str(count) + " items are processed successfully!")
     print(str(numInproceed) + " inproceedings")
@@ -238,5 +253,6 @@ for i in range(len(inpath)):
     print(str(numMisc) + " misc")
     print(str(numBook) + " book")
     print(str(numArticle) + " article")
+    print(str(numIncollection) + " incollection")
 
     fout.close()

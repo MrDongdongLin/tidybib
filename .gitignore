@@ -1,3 +1,5 @@
 *.bib
 test.py
 __pycache__
+bibfile/*.bib
+tidybib/*.bib
