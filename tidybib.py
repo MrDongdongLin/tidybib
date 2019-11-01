@@ -59,7 +59,8 @@ inproceedings_regex = {
     "number": number,
     "series": series,
     "pages": pages,
-    "publisher": publisher
+    "publisher": publisher,
+    "doi": doi
 }
 
 proceedings_regex = {
@@ -120,7 +121,7 @@ article_regex = {
     "volume": volume,
     "number": number,
     "pages": pages,
-    "month": month,
+    # "month": month,
     "doi": doi
 }
 
@@ -159,7 +160,7 @@ def tidy_item(regex, object_str, fout):
                         fout.write(head_content + "\n")
                     else:
                         content = field_content(value, regex["content"], item)
-                        fout.write("  {:<15} = {},\n".format(key, content))
+                        fout.write("  {:<14} {},\n".format(key+" =", content))
             fout.write("}\n\n")
             counter += 1
         except StopIteration:
