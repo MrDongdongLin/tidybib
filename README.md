@@ -25,10 +25,9 @@ Items need to process:
 ## TODO list
 - [ ] More items need to be added: `@inbook`, `@collection`, `@booklet`, `@manual`, `@report`, `@conference`, 
 `@phdthesis`, `@masterthesis`, `@unpublished`;
+- [ ] The first character of the field `month` should be upcese, e.g. `Nov` or `May`.
 - [x] Fileds in each item should be improved. For example, redundant braces should be removed, e.g. `title = {{Test title: {IEEE}}}`
 should be `title = {Test title: {IEEE}}`;
-- [] The first character of the field `month` should be upcese, e.g. `Nov` or `May`.
-- [] In the field of `author`, the last name should after the first name, e.g. `Donny Lin`, not `Lin, Donny`.
 
 ## Usage
 put your bib file in `bibfile`, execute `python tidybib.py` to get tidy bib files in folder `tidybib`,
