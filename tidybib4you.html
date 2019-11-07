@@ -155,23 +155,29 @@ const incollection_regex = {
 }
 
 function tidybib() {
-    let m;
-    var old_version = document.getElementById("old_version").value + "\n%";
+
+    var oversion = document.getElementById("old_version").value + "\n%";
     document.getElementById("new_version").value += outhead;
 
-    while ((m = article.exec(old_version)) !== null) {
-
-        // This is necessary to avoid infinite loops with zero-width matches
-        if (m.index === article.lastIndex) {
-            article.lastIndex++;
-        }
-
-        m.forEach((match, groupIndex) => {
-            // document.getElementById("new_version").value += match;
-            // document.getElementById("new_version").value += match;
-            console.log(`Found match, group ${groupIndex}: ${match}`);
-        })
+    while ((m = article.exec(oversion)) !== null) {
+        document.getElementById("new_version").value += m[0];
     }
+
+    // while ((m = article.exec(oversion)) !== null) {
+
+    //     // This is necessary to avoid infinite loops with zero-width matches
+    //     if (m.index === article.lastIndex) {
+    //         article.lastIndex++;
+    //     }
+
+    //     console.log(`Found match, group ${oversion}`);
+
+    //     // m.forEach((match, groupIndex) => {
+    //     //     document.getElementById("new_version").value += match;
+    //     //     // document.getElementById("new_version").value += match;
+    //     //     console.log(`Found match, group ${groupIndex}: ${match}`);
+    //     // })
+    // }
 }
 
 </script>

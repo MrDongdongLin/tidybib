@@ -42,14 +42,14 @@ edition = r"(?<!\w)(edition[\s\S]*?[}\"],)"
 address = r"(?<!\w)(address[\s\S]*?[}\"],)"
 booktitle = r"(?<!\w)(booktitle[\s\S]*?[}\"],)"
 howpublished = r"(?<!\w)(howpublished[\s\S]*?[}\"],)"
-# extra match
-content = r"(?<=[{\"])([\s\S]*)(?=[}\"])"
+# other match
+outer_brace = r"(?<=[{\"])[^{]([\s\S]*)[^}](?=[}\"])"
+inner_brace = r"(?<=[{\"])[^{]([^{}]+)[^}](?=[}\"])"
 
 # define a regex dictionary contains the field need to be writtern out
 inproceedings_regex = {
     "item": inproceedings,
     "head": head_inproceedings,
-    "content": content,
 
     # NOTE: the following keys must arrange in a certain order, please DONOT change it!
     "author": author,
@@ -68,7 +68,6 @@ inproceedings_regex = {
 proceedings_regex = {
     "item": proceedings,
     "head": head_proceedings,
-    "content": content,
 
     # NOTE: the following keys must arrange in a certain order, please DONOT change it!
     "title": title,
@@ -86,7 +85,6 @@ proceedings_regex = {
 misc_regex = {
     "item": misc,
     "head": head_misc,
-    "content": content,
 
     # NOTE: the following keys must arrange in a certain order, please DONOT change it!
     "author": author,
@@ -99,7 +97,6 @@ misc_regex = {
 book_regex = {
     "item": book,
     "head": head_book,
-    "content": content,
 
     # NOTE: the following keys must arrange in a certain order, please DONOT change it!
     "author": author,
@@ -113,7 +110,6 @@ book_regex = {
 article_regex = {
     "item": article,
     "head": head_article,
-    "content": content,
 
     # NOTE: the following keys must arrange in a certain order, please DONOT change it!
     "author": author,
@@ -129,7 +125,6 @@ article_regex = {
 incollection_regex = {
     "item": incollection,
     "head": head_incollection,
-    "content": content,
 
     # NOTE: the following keys must arrange in a certain order, please DONOT change it!
     "author": author,
@@ -139,8 +134,17 @@ incollection_regex = {
     "year": year
 }
 
+def tidy_title(inner_brace, object_str):
+    object_str = object_str.capitalize()
+
+    matches = re.finditer(inner_brace, object_str, re.MULTILINE | re.IGNORECASE)
+    for matchNum, match in enumerate(matches, start=1):
+        object_str = object_str.replace(match.group(), match.group().upper()) # all the words in inner brace are upper case
+    
+    return object_str
+
 # function field_content returns strings after '=', i.e. the content in '{...}'
-def field_content(reg_field, reg_content, object_str):
+def field_content(field, reg_field, reg_content, object_str):
     match_field = re.finditer(reg_field, object_str, re.MULTILINE | re.IGNORECASE)
     try:
         next_match = next(match_field).group()
@@ -148,6 +152,8 @@ def field_content(reg_field, reg_content, object_str):
         next_content = next(match_content).group()
         content = re.sub("\n+", "", next_content)
         content = re.sub(" +", " ", content)
+        if field == "title":
+            content = tidy_title(inner_brace, content)
         content = "{"+content+"}"
     except StopIteration:
         content = "{}"
@@ -165,16 +171,15 @@ def tidy_item(regex, object_str, fout):
             item = match.group()
 
             for key, value in regex.items():
-                if key == "item" or key == "content":
+                if key == "item":
                     continue
+                elif key == "head":
+                    content = re.finditer(value, item, re.MULTILINE | re.IGNORECASE)
+                    head_content = next(content).group()
+                    fout.write(head_content + "\n")
                 else:
-                    if key == "head":
-                        content = re.finditer(value, item, re.MULTILINE | re.IGNORECASE)
-                        head_content = next(content).group()
-                        fout.write(head_content + "\n")
-                    else:
-                        content = field_content(value, regex["content"], item)
-                        fout.write("  {:<14} {},\n".format(key+" =", content))
+                    content = field_content(key, value, outer_brace, item)
+                    fout.write("  {:<14} {},\n".format(key+" =", content))
             fout.write("}\n\n")
             counter += 1
         except StopIteration:
@@ -187,12 +192,27 @@ parser.add_argument("-i", "--input", help="input bib file, default input all the
 parser.add_argument("-o", "--output", default="tidy.bib", help="output bib file, default output is 'tidy.bib'")
 a = parser.parse_args()
 
+print("=================================== Tidy your bib file ===================================")
+print("* Please create two folders, named `bibfile` and `tidybib` in the root path of this program.")
+print("* Put your bib file into folder `bibfile`, execute")
+print("")
+print("\tpython tidybib.py")
+print("")
+print("* with command line, then you can find the corresponding tidy bib file in folder `tidybib`,")
+print("* which named `tidy_xxx.bib`.")
+print("* You can also generate tidy bib file by using command")
+print("")
+print("\tpython tidybib.py -i yourfile.bib -o tidyfile.bib")
+print("")
+print("* Try `python tidybib.py -h` for more information.")
+print("======================================== end =============================================")
+
 # batch process
 if a.input is None:
-    print("search bib files...")
+    print("Searching bib files in `bibfile`...")
     bib_files = glob.glob("bibfile/*.bib")
     if len(bib_files) <= 0:
-        raise Exception("no bib file!")
+        raise Exception("No bib file in the folder `bibfile`!")
     else:
         inpath = bib_files
 else:
@@ -209,7 +229,7 @@ for i in range(len(inpath)):
         try:
             bibin = bibin + "%"
         except:
-            print("format ERROR: cannot add end mark! Please add "%" in the end of the bib file manually!")
+            print("Format ERROR: cannot add end mark! Please add "%" in the end of the bib file manually!")
 
     # matched items
     comments_matches = re.finditer(comments, bibin, re.MULTILINE | re.IGNORECASE)
@@ -219,7 +239,7 @@ for i in range(len(inpath)):
     _, out_name = os.path.split(inpath[i])
     fout = open("tidybib/tidy_" + out_name, 'w', encoding='UTF-8')
 
-    print("begin to process " + inpath[i] + ". Please wait...")
+    print("Begin to process " + inpath[i] + ". Please wait...")
 
     # comments
     for matchNum, match in enumerate(comments_matches, start=1):
@@ -254,5 +274,6 @@ for i in range(len(inpath)):
     print(str(numBook) + " book")
     print(str(numArticle) + " article")
     print(str(numIncollection) + " incollection")
+    print("Done!")
 
     fout.close()
