@@ -239,7 +239,7 @@ for i in range(len(inpath)):
     _, out_name = os.path.split(inpath[i])
     fout = open("tidybib/tidy_" + out_name, 'w', encoding='UTF-8')
 
-    print("Begin to process " + inpath[i] + ". Please wait...")
+    print("\nBegin to process " + inpath[i] + ". Please wait...")
 
     # comments
     for matchNum, match in enumerate(comments_matches, start=1):

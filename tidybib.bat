@@ -1,3 +1,4 @@
 @echo on
-start python tidybib.py
-exit
+set curdir=%~dp0
+cd %curdir%
+python tidybib.py
