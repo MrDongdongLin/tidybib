@@ -152,6 +152,9 @@ def field_content(field, reg_field, reg_content, object_str):
         next_content = next(match_content).group()
         content = re.sub("\n+", "", next_content)
         content = re.sub(" +", " ", content)
+        # TODO: 套娃问题！
+        content = re.sub("{+", "", content)
+        content = re.sub("}+", "", content)
         if field == "title":
             content = tidy_title(inner_brace, content)
         content = "{"+content+"}"
