@@ -43,7 +43,7 @@ address = r"(?<!\w)(address[\s\S]*?[}\"],)"
 booktitle = r"(?<!\w)(booktitle[\s\S]*?[}\"],)"
 howpublished = r"(?<!\w)(howpublished[\s\S]*?[}\"],)"
 # other match
-outer_brace = r"(?<=[{\"])[^{]([\s\S]*)[^}](?=[}\"])"
+outer_brace = r"(?<=[{\"])([\s\S]*)(?=[}\"])"
 inner_brace = r"(?<=[{\"])[^{]([^{}]+)[^}](?=[}\"])"
 
 # define a regex dictionary contains the field need to be writtern out
@@ -150,14 +150,19 @@ def field_content(field, reg_field, reg_content, object_str):
         next_match = next(match_field).group()
         match_content = re.finditer(reg_content, next_match, re.MULTILINE | re.IGNORECASE)
         next_content = next(match_content).group()
+        # remove extra blanks and enters
         content = re.sub("\n+", "", next_content)
         content = re.sub(" +", " ", content)
         # TODO: 套娃问题！
-        content = re.sub("{+", "", content)
-        content = re.sub("}+", "", content)
-        if field == "title":
-            content = tidy_title(inner_brace, content)
-        content = "{"+content+"}"
+        # if field == "title":
+        #     content = tidy_title(inner_brace, content)
+        if len(content) != 0:
+            if content[0] == "{" and content[-1] == "}":
+                content = content
+            else:
+                content = "{"+content+"}"
+        else:
+            content = "{}"
     except StopIteration:
         content = "{}"
 
