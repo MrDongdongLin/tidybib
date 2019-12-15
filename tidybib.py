@@ -17,12 +17,20 @@ article = r"(@article{[\s\S]*?})(?=[ \\\n]*[@%])"
 book = r"(@book{[\s\S]*?})(?=[ \\\n]*[@%])"
 incollection = r"(@incollection{[\s\S]*?})(?=[ \\\n]*[@%])"
 # head of each item
-head_inproceedings = r"(@inproceedings{[\s\S]*?,)(?=[ \\\n]*)"
-head_proceedings = r"(@proceedings{[\s\S]*?,)(?=[ \\\n]*)"
-head_misc = r"(@misc{[\s\S]*?,)(?=[ \\\n]*)"
-head_article = r"(@article{[\s\S]*?,)(?=[ \\\n]*)"
-head_book = r"(@book{[\s\S]*?,)(?=[ \\\n]*)"
-head_incollection = r"(@incollection{[\s\S]*?,)(?=[ \\\n]*)"
+head_inproceedings = r"(@inproceedings{)"
+head_proceedings = r"(@proceedings{)"
+head_misc = r"(@misc{)"
+head_article = r"(@article{)"
+head_book = r"(@book{)"
+head_incollection = r"(@incollection{)"
+# maybe can be used
+# head_inproceedings = r"(@inproceedings{[\s\S]*?,)(?=[ \\\n]*)"
+# head_proceedings = r"(@proceedings{[\s\S]*?,)(?=[ \\\n]*)"
+# head_misc = r"(@misc{[\s\S]*?,)(?=[ \\\n]*)"
+# head_article = r"(@article{[\s\S]*?,)(?=[ \\\n]*)"
+# head_book = r"(@book{[\s\S]*?,)(?=[ \\\n]*)"
+# head_incollection = r"(@incollection{[\s\S]*?,)(?=[ \\\n]*)"
+
 # field patterns
 author = r"(?<!\w)(author[\s\S]*?[}\"],)"
 title = r"(?<!\w)(title[\s\S]*?[}\"],)"
@@ -45,6 +53,11 @@ howpublished = r"(?<!\w)(howpublished[\s\S]*?[}\"],)"
 # other match
 outer_brace = r"(?<=[{\"])([\s\S]*)(?=[}\"])"
 inner_brace = r"(?<=[{\"])[^{]([^{}]+)[^}](?=[}\"])"
+head_author = r"(?<={)([a-zA-Z]*)(?=\W)"
+inner_year = r"(?<={)(\d*)(?=})"
+# upper cases, add more defines in the future
+uppercases = ['IEEE', 'IETE']
+lowercases = ['on', 'for', 'of', 'and', 'in'] # for journal field
 
 # define a regex dictionary contains the field need to be writtern out
 inproceedings_regex = {
@@ -134,14 +147,6 @@ incollection_regex = {
     "year": year
 }
 
-def tidy_title(inner_brace, object_str):
-    object_str = object_str.capitalize()
-
-    matches = re.finditer(inner_brace, object_str, re.MULTILINE | re.IGNORECASE)
-    for matchNum, match in enumerate(matches, start=1):
-        object_str = object_str.replace(match.group(), match.group().upper()) # all the words in inner brace are upper case
-    
-    return object_str
 
 # function field_content returns strings after '=', i.e. the content in '{...}'
 def field_content(field, reg_field, reg_content, object_str):
@@ -153,9 +158,6 @@ def field_content(field, reg_field, reg_content, object_str):
         # remove extra blanks and enters
         content = re.sub("\n+", "", next_content)
         content = re.sub(" +", " ", content)
-        # TODO: 套娃问题！
-        # if field == "title":
-        #     content = tidy_title(inner_brace, content)
         if len(content) != 0:
             if content[0] == "{" and content[-1] == "}":
                 content = content
@@ -177,27 +179,100 @@ def tidy_item(regex, object_str, fout):
         try:
             match = next(matches)
             item = match.group()
+            id_head = ""
 
+            # extract head from author, title and year, e.g. Lin:ISEA:2017
+            for key, value in regex.items():
+                if key == "author":
+                    author_content = field_content(key, value, outer_brace, item)
+                    first_author = re.finditer(head_author, author_content)
+                    first_author_name = next(first_author).group()
+                    id_head = id_head+first_author_name
+                if key == "title":
+                    contraction_title = ""
+                    title_content = field_content(key, value, outer_brace, item)
+                    inner_title = re.finditer(outer_brace, title_content)
+                    innertitle = next(inner_title).group()
+                    first_characters = [i[0] for i in innertitle.split()]
+                    if len(first_characters) >= 5:
+                        for i in range(5):
+                            contraction_title = contraction_title+first_characters[i]
+                    else:
+                        for i in range(len(first_characters)):
+                            contraction_title = contraction_title+first_characters[i]
+                    id_head = id_head+":"+contraction_title
+                if key == "year":
+                    year_content = field_content(key, value, outer_brace, item)
+                    first_year = re.finditer(inner_year, year_content)
+                    inneryear = next(first_year).group()
+                    id_head = id_head+":"+inneryear
+            # write file
             for key, value in regex.items():
                 if key == "item":
                     continue
                 elif key == "head":
                     content = re.finditer(value, item, re.MULTILINE | re.IGNORECASE)
                     head_content = next(content).group()
-                    fout.write(head_content + "\n")
+                    fout.write(head_content + id_head + ",\n")
                 else:
-                    content = field_content(key, value, outer_brace, item)
-                    fout.write("  {:<14} {},\n".format(key+" =", content))
+                    if key == "journal" or key == "booktitle":
+                        journal_abbr = tidy_journal(key, value, item)
+                        fout.write("  {:<14} {},\n".format(key+" =", journal_abbr))
+                    else:
+                        content = field_content(key, value, outer_brace, item)
+                        fout.write("  {:<14} {},\n".format(key+" =", content))
             fout.write("}\n\n")
             counter += 1
         except StopIteration:
             break
     return counter
 
+
+def tidy_journal(regex, str_journal, item):
+    journal_abbr = ""
+    content = field_content(regex, str_journal, outer_brace, item)
+    inner_journal = re.finditer(outer_brace, content)
+    journal_name = next(inner_journal).group()
+    journal_list = [i for i in journal_name.split()]
+    for i, word in enumerate(journal_list):
+        flag = True
+        end = False
+        if i == len(journal_list)-1:
+            end = True
+        # TODO: simple process. not good!
+        if word[0] == "(":
+            if end:
+                journal_abbr = journal_abbr + word.upper()
+            else:
+                journal_abbr = journal_abbr + word.upper() + " "
+        else:
+            for _, upper_word in enumerate(uppercases):
+                if word.upper() == upper_word:
+                    if end:
+                        journal_abbr = journal_abbr + upper_word
+                    else:
+                        journal_abbr = journal_abbr + upper_word + " "
+                    flag = False
+            for _, lower_word in enumerate(lowercases):
+                if word.lower() == lower_word:
+                    if end:
+                        journal_abbr = journal_abbr + lower_word
+                    else:
+                        journal_abbr = journal_abbr + lower_word + " "
+                    flag = False
+            if flag:
+                if end:
+                    journal_abbr = journal_abbr + word.capitalize()
+                else:
+                    journal_abbr = journal_abbr + word.capitalize() + " "
+    journal_abbr = "{" + journal_abbr + "}"
+    
+    return journal_abbr
+
+
 # parameters
 parser = argparse.ArgumentParser()
 parser.add_argument("-i", "--input", help="input bib file, default input all the bib files in the root path")
-parser.add_argument("-o", "--output", default="tidy.bib", help="output bib file, default output is 'tidy.bib'")
 a = parser.parse_args()
 
 print("=================================== Tidy your bib file ===================================")
@@ -210,7 +285,7 @@ print("* with command line, then you can find the corresponding tidy bib file in
 print("* which named `tidy_xxx.bib`.")
 print("* You can also generate tidy bib file by using command")
 print("")
-print("\tpython tidybib.py -i yourfile.bib -o tidyfile.bib")
+print("\tpython tidybib.py -i yourfile.bib")
 print("")
 print("* Try `python tidybib.py -h` for more information.")
 print("======================================== end =============================================")
@@ -222,13 +297,14 @@ if a.input is None:
     if len(bib_files) <= 0:
         raise Exception("No bib file in the folder `bibfile`!")
     else:
-        inpath = bib_files
+        inpaths = bib_files
 else:
-    inpath = a.input
+    inputs = a.input
+    inpaths = inputs.split()
 
-for i in range(len(inpath)):
+for _, inpath in enumerate(inpaths):
     # open a bib file and read all the items in one time
-    fin = open(inpath[i], 'r', encoding='UTF-8')
+    fin = open(inpath, 'r', encoding='UTF-8')
     bibin = fin.read() # TODO: buffering all the items as a list in one time, if bib file is large, it will consume much time
     fin.close()
 
@@ -237,23 +313,27 @@ for i in range(len(inpath)):
         try:
             bibin = bibin + "%"
         except:
-            print("Format ERROR: cannot add end mark! Please add "%" in the end of the bib file manually!")
+            print("Format ERROR: cannot add end mark! Please add '%' in the end of the bib file manually!")
 
     # matched items
     comments_matches = re.finditer(comments, bibin, re.MULTILINE | re.IGNORECASE)
     abbr_matches = re.finditer(abbr, bibin, re.MULTILINE | re.IGNORECASE)
 
     # write tidy bib file
-    _, out_name = os.path.split(inpath[i])
-    fout = open("tidybib/tidy_" + out_name, 'w', encoding='UTF-8')
+    _, out_name = os.path.split(inpath)
+    if a.input is None:
+        fout = open("tidybib/tidy_" + out_name, 'w', encoding='UTF-8')
+    else:
+        fout = open("tidy_" + out_name, 'w', encoding='UTF-8')
+    fcomments = open("comment_logs.txt", 'w', encoding='UTF-8')
 
-    print("\nBegin to process " + inpath[i] + ". Please wait...")
+    print("\nBegin to process " + inpath + ". Please wait...")
 
     # comments
     for matchNum, match in enumerate(comments_matches, start=1):
         item = match.group()
-        fout.write(item + "\n")
-    fout.write("\n")
+        fcomments.write(item + "\n")
+    fcomments.write("\n")
 
     # abbr
     for matchNum, match in enumerate(abbr_matches, start=1):
