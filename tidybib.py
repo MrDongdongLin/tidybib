@@ -23,7 +23,7 @@ head_misc = r"(@misc{)"
 head_article = r"(@article{)"
 head_book = r"(@book{)"
 head_incollection = r"(@incollection{)"
-# maybe can be used
+# can be used
 # head_inproceedings = r"(@inproceedings{[\s\S]*?,)(?=[ \\\n]*)"
 # head_proceedings = r"(@proceedings{[\s\S]*?,)(?=[ \\\n]*)"
 # head_misc = r"(@misc{[\s\S]*?,)(?=[ \\\n]*)"
@@ -57,14 +57,14 @@ head_author = r"(?<={)([a-zA-Z]*)(?=\W)"
 inner_year = r"(?<={)(\d*)(?=})"
 # upper cases, add more defines in the future
 uppercases = ['IEEE', 'IETE']
-lowercases = ['on', 'for', 'of', 'and', 'in'] # for journal field
+lowercases = ['on', 'for', 'of', 'and', 'in']  # for journal field
 
-# define a regex dictionary contains the field need to be writtern out
+# define a regex dictionary contains the field need to be written out
 inproceedings_regex = {
     "item": inproceedings,
     "head": head_inproceedings,
 
-    # NOTE: the following keys must arrange in a certain order, please DONOT change it!
+    # NOTE: the following keys must arrange in a certain order, DONOT change it!
     "author": author,
     "title": title,
     "booktitle": booktitle,
@@ -82,7 +82,7 @@ proceedings_regex = {
     "item": proceedings,
     "head": head_proceedings,
 
-    # NOTE: the following keys must arrange in a certain order, please DONOT change it!
+    # NOTE: the following keys must arrange in a certain order, DONOT change it!
     "title": title,
     "year": year,
     "editor": editor,
@@ -99,7 +99,7 @@ misc_regex = {
     "item": misc,
     "head": head_misc,
 
-    # NOTE: the following keys must arrange in a certain order, please DONOT change it!
+    # NOTE: the following keys must arrange in a certain order, DONOT change it!
     "author": author,
     "title": title,
     "howpublished": howpublished,
@@ -111,7 +111,7 @@ book_regex = {
     "item": book,
     "head": head_book,
 
-    # NOTE: the following keys must arrange in a certain order, please DONOT change it!
+    # NOTE: the following keys must arrange in a certain order, DONOT change it!
     "author": author,
     "title": title,
     "year": year,
@@ -124,7 +124,7 @@ article_regex = {
     "item": article,
     "head": head_article,
 
-    # NOTE: the following keys must arrange in a certain order, please DONOT change it!
+    # NOTE: the following keys must arrange in a certain order, DONOT change it!
     "author": author,
     "title": title,
     "journal": journal,
@@ -139,7 +139,7 @@ incollection_regex = {
     "item": incollection,
     "head": head_incollection,
 
-    # NOTE: the following keys must arrange in a certain order, please DONOT change it!
+    # NOTE: the following keys must arrange in a certain order, DONOT change it!
     "author": author,
     "title": title,
     "booktitle": booktitle,
@@ -162,13 +162,14 @@ def field_content(field, reg_field, reg_content, object_str):
             if content[0] == "{" and content[-1] == "}":
                 content = content
             else:
-                content = "{"+content+"}"
+                content = "{" + content + "}"
         else:
             content = "{}"
     except StopIteration:
         content = "{}"
 
     return content
+
 
 def tidy_item(regex, object_str, fout):
     # output_str = [] # TODO: we can buffer the tidy item and write them out afterwards
@@ -187,7 +188,7 @@ def tidy_item(regex, object_str, fout):
                     author_content = field_content(key, value, outer_brace, item)
                     first_author = re.finditer(head_author, author_content)
                     first_author_name = next(first_author).group()
-                    id_head = id_head+first_author_name
+                    id_head = id_head + first_author_name
                 if key == "title":
                     contraction_title = ""
                     title_content = field_content(key, value, outer_brace, item)
@@ -196,16 +197,16 @@ def tidy_item(regex, object_str, fout):
                     first_characters = [i[0] for i in innertitle.split()]
                     if len(first_characters) >= 5:
                         for i in range(5):
-                            contraction_title = contraction_title+first_characters[i]
+                            contraction_title = contraction_title + first_characters[i]
                     else:
                         for i in range(len(first_characters)):
-                            contraction_title = contraction_title+first_characters[i]
-                    id_head = id_head+":"+contraction_title
+                            contraction_title = contraction_title + first_characters[i]
+                    id_head = id_head + ":" + contraction_title
                 if key == "year":
                     year_content = field_content(key, value, outer_brace, item)
                     first_year = re.finditer(inner_year, year_content)
                     inneryear = next(first_year).group()
-                    id_head = id_head+":"+inneryear
+                    id_head = id_head + ":" + inneryear
             # write file
             for key, value in regex.items():
                 if key == "item":
@@ -217,10 +218,10 @@ def tidy_item(regex, object_str, fout):
                 else:
                     if key == "journal" or key == "booktitle":
                         journal_abbr = tidy_journal(key, value, item)
-                        fout.write("  {:<14} {},\n".format(key+" =", journal_abbr))
+                        fout.write("  {:<14} {},\n".format(key + " =", journal_abbr))
                     else:
                         content = field_content(key, value, outer_brace, item)
-                        fout.write("  {:<14} {},\n".format(key+" =", content))
+                        fout.write("  {:<14} {},\n".format(key + " =", content))
             fout.write("}\n\n")
             counter += 1
         except StopIteration:
@@ -237,7 +238,7 @@ def tidy_journal(regex, str_journal, item):
     for i, word in enumerate(journal_list):
         flag = True
         end = False
-        if i == len(journal_list)-1:
+        if i == len(journal_list) - 1:
             end = True
         # TODO: simple process. not good!
         if word[0] == "(":
@@ -266,7 +267,7 @@ def tidy_journal(regex, str_journal, item):
                 else:
                     journal_abbr = journal_abbr + word.capitalize() + " "
     journal_abbr = "{" + journal_abbr + "}"
-    
+
     return journal_abbr
 
 
@@ -305,7 +306,7 @@ else:
 for _, inpath in enumerate(inpaths):
     # open a bib file and read all the items in one time
     fin = open(inpath, 'r', encoding='UTF-8')
-    bibin = fin.read() # TODO: buffering all the items as a list in one time, if bib file is large, it will consume much time
+    bibin = fin.read()  # TODO: buffering all the items as a list in one time, if bib file is large, it will consume much time
     fin.close()
 
     # add end mark to bib file to ensure the last item can be matched
