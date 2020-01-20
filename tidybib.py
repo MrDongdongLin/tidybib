@@ -6,6 +6,12 @@ import os
 import glob
 import argparse
 
+# parameters
+parser = argparse.ArgumentParser()
+parser.add_argument("-i", "--input", help="input bib file, default input all the bib files in the root path")
+parser.add_argument("-t", "--tidyid", choices=["yes", "no"], default="no", help="if this opt is yes, tidybib will generate an normative ID of each item")
+a = parser.parse_args()
+
 # we define some regex below
 # item patterns
 comments = r"(%.*)"
@@ -17,12 +23,20 @@ article = r"(@article{[\s\S]*?})(?=[ \\\n]*[@%])"
 book = r"(@book{[\s\S]*?})(?=[ \\\n]*[@%])"
 incollection = r"(@incollection{[\s\S]*?})(?=[ \\\n]*[@%])"
 # head of each item
-head_inproceedings = r"(@inproceedings{)"
-head_proceedings = r"(@proceedings{)"
-head_misc = r"(@misc{)"
-head_article = r"(@article{)"
-head_book = r"(@book{)"
-head_incollection = r"(@incollection{)"
+if a.tidyid == "yes":
+    head_inproceedings = r"(@inproceedings{)"
+    head_proceedings = r"(@proceedings{)"
+    head_misc = r"(@misc{)"
+    head_article = r"(@article{)"
+    head_book = r"(@book{)"
+    head_incollection = r"(@incollection{)"
+else:
+    head_inproceedings = r"(@inproceedings{[\s\S]*?,)(?=[ \\\n]*)"
+    head_proceedings = r"(@proceedings{[\s\S]*?,)(?=[ \\\n]*)"
+    head_misc = r"(@misc{[\s\S]*?,)(?=[ \\\n]*)"
+    head_article = r"(@article{[\s\S]*?,)(?=[ \\\n]*)"
+    head_book = r"(@book{[\s\S]*?,)(?=[ \\\n]*)"
+    head_incollection = r"(@incollection{[\s\S]*?,)(?=[ \\\n]*)"
 # can be used
 # head_inproceedings = r"(@inproceedings{[\s\S]*?,)(?=[ \\\n]*)"
 # head_proceedings = r"(@proceedings{[\s\S]*?,)(?=[ \\\n]*)"
@@ -214,7 +228,10 @@ def tidy_item(regex, object_str, fout):
                 elif key == "head":
                     content = re.finditer(value, item, re.MULTILINE | re.IGNORECASE)
                     head_content = next(content).group()
-                    fout.write(head_content + id_head + ",\n")
+                    if a.tidyid == "yes":
+                        fout.write(head_content + id_head + ",\n")
+                    else:
+                        fout.write(head_content + "\n")
                 else:
                     if key == "journal" or key == "booktitle":
                         journal_abbr = tidy_journal(key, value, item)
@@ -269,12 +286,6 @@ def tidy_journal(regex, str_journal, item):
     journal_abbr = "{" + journal_abbr + "}"
 
     return journal_abbr
-
-
-# parameters
-parser = argparse.ArgumentParser()
-parser.add_argument("-i", "--input", help="input bib file, default input all the bib files in the root path")
-a = parser.parse_args()
 
 print("=================================== Tidy your bib file ===================================")
 print("* Please create two folders, named `bibfile` and `tidybib` in the root path of this program.")
