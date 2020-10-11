@@ -46,24 +46,24 @@ else:
 # head_incollection = r"(@incollection{[\s\S]*?,)(?=[ \\\n]*)"
 
 # field patterns
-author = r"(?<!\w)(author[\s\S]*?[}\"],)"
-title = r"(?<!\w)(title[\s\S]*?[}\"],)"
-journal = r"(?<!\w)(journal[\s\S]*?[}\"],)"
-year = r"(?<!\w)(year[\s\S]*?[}\"],)"
-volume = r"(?<!\w)(volume[\s\S]*?[}\"],)"
-number = r"(?<!\w)(number[\s\S]*?[}\"],)"
-pages = r"(?<!\w)(pages[\s\S]*?[}\"],)"
-month = r"(?<!\w)(month[\s\S]*?[}\"],)"
-doi = r"(?<!\w)(doi[\s\S]*?[}\"],)"
-editor = r"(?<!\w)(editor[\s\S]*?[}\"],)"
-publisher = r"(?<!\w)(publisher[\s\S]*?[}\"],)"
-series = r"(?<!\w)(series[\s\S]*?[}\"],)"
-organization = r"(?<!\w)(organization[\s\S]*?[}\"],)"
-address = r"(?<!\w)(address[\s\S]*?[}\"],)"
-edition = r"(?<!\w)(edition[\s\S]*?[}\"],)"
-address = r"(?<!\w)(address[\s\S]*?[}\"],)"
-booktitle = r"(?<!\w)(booktitle[\s\S]*?[}\"],)"
-howpublished = r"(?<!\w)(howpublished[\s\S]*?[}\"],)"
+author = r"(?<!\w)(author)(?=[= ])([\s\S]*?)([}\"],).*(?=( |\n))"
+title = r"(?<!\w)(title)(?=[= ])([\s\S]*?)([}\"],).*(?=( |\n))"
+journal = r"(?<!\w)(journal)(?=[= ])([\s\S]*?)([}\"],).*(?=( |\n))"
+year = r"(?<!\w)(year)(?=[= ])([\s\S]*?)([}\"],).*(?=( |\n))"
+volume = r"(?<!\w)(volume)(?=[= ])([\s\S]*?)([}\"],).*(?=( |\n))"
+number = r"(?<!\w)(number)(?=[= ])([\s\S]*?)([}\"],).*(?=( |\n))"
+pages = r"(?<!\w)(pages)(?=[= ])([\s\S]*?)([}\"],).*(?=( |\n))"
+month = r"(?<!\w)(month)(?=[= ])([\s\S]*?)([}\"],).*(?=( |\n))"
+doi = r"(?<!\w)(doi)(?=[= ])([\s\S]*?)([}\"],).*(?=( |\n))"
+editor = r"(?<!\w)(editor)(?=[= ])([\s\S]*?)([}\"],).*(?=( |\n))"
+publisher = r"(?<!\w)(publisher)(?=[= ])([\s\S]*?)([}\"],).*(?=( |\n))"
+series = r"(?<!\w)(series)(?=[= ])([\s\S]*?)([}\"],).*(?=( |\n))"
+organization = r"(?<!\w)(organization)(?=[= ])([\s\S]*?)([}\"],).*(?=( |\n))"
+address = r"(?<!\w)(address)(?=[= ])([\s\S]*?)([}\"],).*(?=( |\n))"
+edition = r"(?<!\w)(edition)(?=[= ])([\s\S]*?)([}\"],).*(?=( |\n))"
+address = r"(?<!\w)(address)(?=[= ])([\s\S]*?)([}\"],).*(?=( |\n))"
+booktitle = r"(?<!\w)(booktitle)(?=[= ])([\s\S]*?)([}\"],).*(?=( |\n))"
+howpublished = r"(?<!\w)(howpublished)(?=[= ])([\s\S]*?)([}\"],).*(?=( |\n))"
 # other match
 outer_brace = r"(?<=[{\"])([\s\S]*)(?=[}\"])"
 inner_brace = r"(?<=[{\"])[^{]([^{}]+)[^}](?=[}\"])"
@@ -161,7 +161,6 @@ incollection_regex = {
     "year": year
 }
 
-
 # function field_content returns strings after '=', i.e. the content in '{...}'
 def field_content(field, reg_field, reg_content, object_str):
     match_field = re.finditer(reg_field, object_str, re.MULTILINE | re.IGNORECASE)
@@ -175,8 +174,10 @@ def field_content(field, reg_field, reg_content, object_str):
         if len(content) != 0:
             if content[0] == "{" and content[-1] == "}":
                 content = content
+                # content = content[:1] + content[1].upper() + content[2:]
             else:
                 content = "{" + content + "}"
+                # content = "{" + content[0].upper() + content[1:] + "}"
         else:
             content = "{}"
     except StopIteration:
@@ -184,6 +185,15 @@ def field_content(field, reg_field, reg_content, object_str):
 
     return content
 
+def tidy_title(title):
+    match_str = re.finditer(r"{[^{}]+}", title, re.MULTILINE)
+    title = title.capitalize()
+    try:
+        next_match = next(match_str).group()
+        title = re.sub("{[^{}]+}", next_match, title)
+    except StopIteration:
+        title = title
+    return title
 
 def tidy_item(regex, object_str, fout):
     # output_str = [] # TODO: we can buffer the tidy item and write them out afterwards
@@ -236,6 +246,12 @@ def tidy_item(regex, object_str, fout):
                     if key == "journal" or key == "booktitle":
                         journal_abbr = tidy_journal(key, value, item)
                         fout.write("  {:<14} {},\n".format(key + " =", journal_abbr))
+                    elif key == "title":
+                        content = field_content(key, value, outer_brace, item)
+                        content = content[0] + content[1].upper() + content[2:]
+                        content = content[1:-1]
+                        content = "{" + tidy_title(content) + "}"
+                        fout.write("  {:<14} {},\n".format(key + " =", content))
                     else:
                         content = field_content(key, value, outer_brace, item)
                         fout.write("  {:<14} {},\n".format(key + " =", content))
