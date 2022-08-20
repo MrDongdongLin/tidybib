@@ -1,4 +1,4 @@
 @echo on
 set curdir=%~dp0
 cd %curdir%
-python tidybib.py
+python tidybib.py --tidyid yes

@@ -16,8 +16,8 @@ def field_content(field, reg_field, reg_content, object_str):
         match_content = re.finditer(reg_content, next_match, re.MULTILINE | re.IGNORECASE)
         next_content = next(match_content).group()
         # remove extra blanks and enters
-        content = re.sub("\n+", "", next_content)
-        content = re.sub(" +", " ", content)
+        _content = re.sub("\n+", "", next_content)
+        content = re.sub(" +", " ", _content)
         if len(content) != 0:
             if content[0] == "{" and content[-1] == "}":
                 content = content
@@ -27,6 +27,7 @@ def field_content(field, reg_field, reg_content, object_str):
                 # content = "{" + content[0].upper() + content[1:] + "}"
         else:
             content = "{}"
+        
     except StopIteration:
         content = "{}"
 
@@ -80,7 +81,7 @@ def tidy_item(regex, object_str, fout, regs):
                     id_head = id_head + ":" + inneryear
             # write file
             for key, value in regex.items():
-                if key == "item":
+                if key == "item" or len(value)==0:
                     continue
                 elif key == "head":
                     content = re.finditer(value, item, re.MULTILINE | re.IGNORECASE)
@@ -88,7 +89,8 @@ def tidy_item(regex, object_str, fout, regs):
                     if args.tidyid == "yes":
                         fout.write(head_content + id_head + ",\n")
                     else:
-                        fout.write(head_content + "\n")
+                        new_head = re.sub(" +", "", head_content)
+                        fout.write(new_head + "\n")
                 else:
                     if key == "journal" or key == "booktitle":
                         journal_abbr = tidy_journal(key, value, item, regs)
@@ -101,7 +103,10 @@ def tidy_item(regex, object_str, fout, regs):
                         fout.write("  {:<14} {},\n".format(key + " =", content))
                     else:
                         content = field_content(key, value, regs.outer_brace, item)
-                        fout.write("  {:<14} {},\n".format(key + " =", content))
+                        if content == "{}":
+                            continue
+                        else:
+                            fout.write("  {:<14} {},\n".format(key + " =", content))
             fout.write("}\n\n")
             counter += 1
         except StopIteration:
@@ -174,6 +179,12 @@ def main(args, regs):
         if len(bib_files) <= 0:
             raise Exception("No bib file in the folder `bibfile`!")
         else:
+            print(bib_files)
+            _bib_files = bib_files.copy()
+            for b in _bib_files:
+                if b.startswith('bibfile'+os.sep+'tidy_'):
+                    bib_files.remove(b)
+            print(bib_files)
             inpaths = bib_files
     else:
         inputs = args.input
@@ -202,15 +213,16 @@ def main(args, regs):
             fout = open("bibfile/tidy_" + out_name, 'w', encoding='UTF-8')
         else:
             fout = open("tidy_" + out_name, 'w', encoding='UTF-8')
+
         fcomments = open("comment_logs.txt", 'w', encoding='UTF-8')
 
         print("\nBegin to process " + inpath + ". Please wait...")
 
         # comments
-        for matchNum, match in enumerate(comments_matches, start=1):
-            item = match.group()
-            fcomments.write(item + "\n")
-        fcomments.write("\n")
+        # for matchNum, match in enumerate(comments_matches, start=1):
+        #     item = match.group()
+        #     fcomments.write(item + "\n")
+        # fcomments.write("\n")
 
         # abbr
         for matchNum, match in enumerate(abbr_matches, start=1):

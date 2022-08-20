@@ -4,3 +4,8 @@ __pycache__
 bibfile/*.bib
 tidybib/*.bib
 comment_logs.txt
+app/*
+mysettings.json
+tidy_t.bib
+tidybib_app.exe
+tidybib_app.zip

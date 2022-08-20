@@ -43,13 +43,13 @@ class BuildRegex():
         # field patterns
         self.author = r"(?<!\w)(author)(?=[= ])([\s\S]*?)([}\"],).*(?=( |\n))"
         self.title = r"(?<!\w)(title)(?=[= ])([\s\S]*?)([}\"],).*(?=( |\n))"
-        self.journal = r"(?<!\w)(journal)(?=[= ])([\s\S]*?)([}\"],).*(?=( |\n))"
+        self.journal = r"(?<!\w)(journal)(?=[= ])([\s\S]*?)(,).*(?=( |\n))"
         self.year = r"(?<!\w)(year)(?=[= ])([\s\S]*?)([}\"],).*(?=( |\n))"
         self.volume = r"(?<!\w)(volume)(?=[= ])([\s\S]*?)([}\"],).*(?=( |\n))"
-        self.number = r"(?<!\w)(number)(?=[= ])([\s\S]*?)([}\"],).*(?=( |\n))"
+        self.number = r"(?<!\w)(number)(?=.*=)([\s\S]*?)([}\"],).*(?=( |\n))"
         self.pages = r"(?<!\w)(pages)(?=[= ])([\s\S]*?)([}\"],).*(?=( |\n))"
         self.month = r"(?<!\w)(month)(?=[= ])([\s\S]*?)([}\"],).*(?=( |\n))"
-        self.doi = r"(?<!\w)(doi)(?=[= ])([\s\S]*?)([}\"],).*(?=( |\n))"
+        self.doi = r"(?<!\w)(doi)(?=[= ])([\s\S]*?)([}\"],).*(?=( |\n|}))"
         self.editor = r"(?<!\w)(editor)(?=[= ])([\s\S]*?)([}\"],).*(?=( |\n))"
         self.publisher = r"(?<!\w)(publisher)(?=[= ])([\s\S]*?)([}\"],).*(?=( |\n))"
         self.series = r"(?<!\w)(series)(?=[= ])([\s\S]*?)([}\"],).*(?=( |\n))"
@@ -62,10 +62,10 @@ class BuildRegex():
         # other match
         self.outer_brace = r"(?<=[{\"])([\s\S]*)(?=[}\"])"
         self.inner_brace = r"(?<=[{\"])[^{]([^{}]+)[^}](?=[}\"])"
-        self.head_author = r"(?<={)([a-zA-Z]*)(?=\W)"
+        self.head_author = r"(?<={)(\S+)(?=,|\W)"
         self.inner_year = r"(?<={)(\d*)(?=})"
         # upper cases, add more defines in the future
-        self.uppercases = ['IEEE', 'IETE']
+        self.uppercases = ['IEEE', 'IETE', 'ACM']
         self.lowercases = ['on', 'for', 'of', 'and', 'in']  # for journal field
 
         # define a regex dictionary contains the field need to be written out
@@ -126,7 +126,8 @@ class BuildRegex():
             "year": self.year,
             "edition": self.edition,
             "publisher": self.publisher,
-            "address": self.address
+            "address": self.address,
+            "doi": self.doi
         }
 
         self.article_regex = {
