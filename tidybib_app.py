@@ -3,68 +3,57 @@ import PySimpleGUI as sg
 from pathlib import Path
 from utils.parse import parses
 from utils.regs import BuildRegex
-from layout import TidyBIB
+from layout import TidyBIBLayout
 from tidyer import Tidyer
 
 
 
+class TidyBIBApp(TidyBIBLayout):
+    def __init__(self):
+        TidyBIBLayout.__init__(self)
+        self.base_cls = 'TidyBIB'
+        self.tidyer = Tidyer()
+
+    def tidy_processor(self):
+        bibin = ""
+        regs = BuildRegex()                          # build regex
+        if self.custom_fileds:                       # custom fields not empty
+            for k, v in self.custom_fileds.items():
+                if not v:                            # if the field is not selected
+                    if k in regs.inproceedings_regex:
+                        del regs.inproceedings_regex[k]
+                    if k in regs.proceedings_regex:
+                        del regs.proceedings_regex[k]
+                    if k in regs.misc_regex:
+                        del regs.misc_regex[k] 
+                    if k in regs.book_regex:
+                        del regs.book_regex[k]
+                    if k in regs.article_regex:
+                        del regs.article_regex[k]
+                    if k in regs.incollection_regex:
+                        del regs.incollection_regex[k]
+        for lines in self.values['-Input-']:
+            bibin = bibin + lines
+        # window['-Output-'].Update(text)
+        outputs, msg = self.tidyer.tidyer(regs, bibin)
+        mystr = ''
+        for x in outputs:
+            mystr += ''+x
+        self.tidybib_window['-Output-'].Update(mystr)
+        # print(outputs)
+        outmsg = ''
+        outmsg += 'Total bib tiems: ' + str(msg['total']) + ' ('
+        outmsg += 'Article: ' + str(msg['article']) + ' |'
+        outmsg += '\t' + 'Inproceedings: ' + str(msg['inproc']) + ' |'
+        outmsg += '\t' + 'Proceedings: ' + str(msg['proc']) + ' |'
+        outmsg += '\t' + 'Book: ' + str(msg['book']) + ' |'
+        outmsg += '\t' + 'Misc: ' + str(msg['misc']) + ' |'
+        outmsg += '\t' + 'Incollection: ' + str(msg['incollect'])
+        outmsg += ')'
+        self.tidybib_window['-OutMsg-'].Update(outmsg)
+
 if __name__ == '__main__':
 
-    tidybib = TidyBIB()
-    tidybib_window = tidybib.menus()
-    tidyer = Tidyer()
+    tidybib_app = TidyBIBApp()
+    tidybib_app.event_processor()
 
-    # ------ Loop & Process button menu choices ------ #
-    while True:
-        event, values = tidybib_window.read()
-        if event in (sg.WIN_CLOSED, 'Exit'):
-            break
-        # ------ Process menu choices ------ #
-        if event == 'About':
-            tidybib_window.about()
-        elif event == 'Open':
-            filename = sg.popup_get_file('file to open', no_window=True)
-            if Path(filename).is_file():
-                try:
-                    with open(filename, "r", encoding='utf-8') as f:
-                        text = f.read()
-                    tidybib_window['-Input-'].Update(text)
-                except Exception as e:
-                    print("Error: ", e)
-        elif event == '-IN-':
-            filename = values['-IN-']
-            if Path(filename).is_file():
-                try:
-                    with open(filename, "r", encoding='utf-8') as f:
-                        text = f.read()
-                    tidybib_window['-Input-'].Update(text)
-                except Exception as e:
-                    print("Error: ", e)
-        elif event == 'Tidy':
-            bibin = ""
-            args = parses()
-            regs = BuildRegex()
-            for lines in values["-Input-"]:
-                bibin = bibin + lines
-            # window['-Output-'].Update(text)
-            outputs, msg = tidyer.tidyer(regs, bibin)
-            mystr = ''
-            for x in outputs:
-                mystr += ''+x
-            tidybib_window['-Output-'].Update(mystr)
-            # print(outputs)
-            outmsg = ''
-            outmsg += 'Total bib tiems: ' + str(msg['total']) + ' ('
-            outmsg += 'Article: ' + str(msg['article']) + ' |'
-            outmsg += '\t' + 'Inproceedings: ' + str(msg['inproc']) + ' |'
-            outmsg += '\t' + 'Proceedings: ' + str(msg['proc']) + ' |'
-            outmsg += '\t' + 'Book: ' + str(msg['book']) + ' |'
-            outmsg += '\t' + 'Misc: ' + str(msg['misc']) + ' |'
-            outmsg += '\t' + 'Incollection: ' + str(msg['incollect'])
-            outmsg += ')'
-            tidybib_window['-OutMsg-'].Update(outmsg)
-
-        elif event == 'Filepath':
-            with open(values['Filepath'], "wt", encoding='UTF-8') as f:
-                f.write(tidybib_window['-Output-'].get())
-    tidybib_window.close()

@@ -4,6 +4,8 @@ import re
 class Tidyer():
     def __init__(self):
         self.outputs = []
+        self.indent = 'space'
+        self.spaces = 2
 
     def field_content(self, field, reg_field, reg_content, object_str):
         match_field = re.finditer(reg_field, object_str, re.MULTILINE | re.IGNORECASE)
@@ -131,7 +133,8 @@ class Tidyer():
                     else:
                         if key == "journal" or key == "booktitle":
                             journal_abbr = self.tidy_journal(key, value, item, regs)
-                            new_journal_abbr = "  {:<14} {},\n".format(key + " =", journal_abbr)
+                            if self.indent == 'space':
+                                new_journal_abbr = "{e:<{size}}{k:<14} {c},\n".format(e=' ', size=self.spaces, k=key+' =', c=journal_abbr)
                             fout.append(new_journal_abbr)
                             # fout.write("  {:<14} {},\n".format(key + " =", journal_abbr))
                         elif key == "title":
@@ -139,7 +142,7 @@ class Tidyer():
                             content = content[0] + content[1].upper() + content[2:]
                             content = content[1:-1]
                             content = "{" + self.tidy_title(content) + "}"
-                            new_content = "  {:<14} {},\n".format(key + " =", content)
+                            new_content = "{e:<{size}}{k:<14} {c},\n".format(e=' ', size=self.spaces, k=key+' =', c=content)
                             fout.append(new_content)
                             # fout.write("  {:<14} {},\n".format(key + " =", content))
                         else:
@@ -147,7 +150,7 @@ class Tidyer():
                             if content == "{}":
                                 continue
                             else:
-                                new_content = "  {:<14} {},\n".format(key + " =", content)
+                                new_content = "{e:<{size}}{k:<14} {c},\n".format(e=' ', size=self.spaces, k=key+' =', c=content)
                                 fout.append(new_content)
                                 # fout.write("  {:<14} {},\n".format(key + " =", content))
                 fout.append("}\n\n")
