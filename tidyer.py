@@ -173,7 +173,7 @@ class Tidyer():
 
         # write tidy bib file
         # global outputs
-        # outputs = []
+        self.outputs = []
         for matchNum, match in enumerate(abbr_matches, start=1):
             item = match.group()
             abbr = re.sub("\n+", "", item)

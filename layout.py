@@ -61,7 +61,7 @@ class TidyBIBLayout(ABC):
                     [sg.Multiline(size=(60,25), key='-Input-', expand_x=True, expand_y=True, font=font),
                      sg.Multiline(size=(60,25), key='-Output-', expand_x=True, expand_y=True, font=font)],
                     [sg.Multiline(size=(122,2), key='-OutMsg-', expand_x=True, expand_y=True, background_color='Gray', text_color='White', font=font)],
-                    [sg.Input(visible=False, enable_events=True, key='-IN-'), sg.FilesBrowse(pad=(10,10)),
+                    [sg.Input(visible=False, enable_events=True, key='-IN-'), sg.FilesBrowse(pad=(1,10)),
                      sg.Button('Tidy', pad=(10,10)), 
                      sg.InputText('', do_not_clear=False, visible=False, key='Filepath', enable_events=True),
                      sg.FileSaveAs(initial_folder='./bibfile',pad=(10,10)), 
@@ -93,6 +93,7 @@ class TidyBIBLayout(ABC):
                     try:
                         with open(filename, "r", encoding='utf-8') as f:
                             text = f.read()
+                        self.tidybib_window['-Input-'].Update('')
                         self.tidybib_window['-Input-'].Update(text)
                     except Exception as e:
                         print("Error: ", e)
@@ -102,6 +103,7 @@ class TidyBIBLayout(ABC):
                     try:
                         with open(filename, "r", encoding='utf-8') as f:
                             text = f.read()
+                        self.tidybib_window['-Input-'].Update('')
                         self.tidybib_window['-Input-'].Update(text)
                     except Exception as e:
                         print("Error: ", e)

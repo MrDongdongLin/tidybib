@@ -12,34 +12,50 @@ digital typesetting and created TeX and Metafont." ---wiki
 Knuth creates TeX for easy and simple typesetting, so a complex tex file is intolerable.
 
 There are many databases that provide comprehensive citation data, such as Web of Science, IEEE. There
-are also different formats of bib file from different database. They are often difficult to read. So I
-develop the tool `tidybib` to get a tidy bib files.
+are also different formats of bib file from different database. They are often difficult to read. Therefore `Tidybib` is developed to tidy the bib files into a standardize style.
 
-Items need to process:
+The bib items before processing:
 
-1. "% -----"
-2. "@string{-----}" ignore case
-3. "@inproceedings{-----}" ignore case
-4. "@proceedings{-----}" ignore case
-5. "@misc{-----} ignore case
-6. "@article{{-----}" ignore case
-7. "@book{-----}" ignore case
-
-## TODO list
-
-- [ ] More items need to be added: `@inbook`, `@collection`, `@booklet`, `@manual`, `@report`, `@conference`, 
-`@phdthesis`, `@masterthesis`, `@unpublished`;
-- [ ] The first character of the field `month` should be upcese, e.g. `Nov` or `May`.
-- [x] Fileds in each item should be improved. For example, redundant braces should be removed, e.g. `title = {{Test title: {IEEE}}}`
-should be `title = {Test title: {IEEE}}`;
-
-## Usage
-
-put your bib file in `bibfile`, execute `python tidybib.py` to get tidy bib files in folder `tidybib`,
-or
-
-```python
-python tidybib.py -i yourfile.bib -o outpath.bib
+```tex
+@inproceedings{ WOS:000766209400010,
+Author = {Li, Yue and Abady, Lydia and Wang, Hongxia and Barni, Mauro},
+Editor = {Zhao, X and Piva, A and ComesanaAlfaro, P},
+Title = {A Feature-Map-Based Large-Payload DNN Watermarking Algorithm},
+Booktitle = {DIGITAL FORENSICS AND WATERMARKING, IWDW 2021},
+Series = {Lecture Notes in Computer Science},
+Year = {2022},
+Volume = {13180},
+Pages = {135-148},
+Note = {20th International Workshop on Digital-Forensics and Watermarking
+   (IWDW), Beijing, PEOPLES R CHINA, NOV 20-22, 2021},
+Organization = {Chinese Acad Sci, Inst Informat Engn, State Key Lab Informat Secur; New
+   Jersey Institute of Technology; Springer},
+DOI = {10.1007/978-3-030-95398-0\_10},
+ISSN = {0302-9743},
+EISSN = {1611-3349},
+ISBN = {978-3-030-95398-0; 978-3-030-95397-3},
+Unique-ID = {WOS:000766209400010},
+}
 ```
 
-enter `python tidybib.py -h` for help
+After processing:
+
+```tex
+@inproceedings{WOS:000766209400010,
+  author =       {Li, Yue and Abady, Lydia and Wang, Hongxia and Barni, Mauro},
+  title =        {A feature-map-based large-payload dnn watermarking algorithm},
+  booktitle =    {Digital Forensics and Watermarking, Iwdw 2021},
+  year =         {2022},
+  editor =       {Zhao, X and Piva, A and ComesanaAlfaro, P},
+  volume =       {13180},
+  series =       {Lecture Notes in Computer Science},
+  pages =        {135-148},
+  doi =          {10.1007/978-3-030-95398-0\_10},
+}
+```
+
+## Download
+
+https://github.com/MrDongdongLin/tidybib/releases
+
+## 

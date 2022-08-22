@@ -39,6 +39,8 @@ class TidyBIBApp(TidyBIBLayout):
         mystr = ''
         for x in outputs:
             mystr += ''+x
+        
+        self.tidybib_window['-Output-'].Update('')
         self.tidybib_window['-Output-'].Update(mystr)
         # print(outputs)
         outmsg = ''
@@ -50,6 +52,7 @@ class TidyBIBApp(TidyBIBLayout):
         outmsg += '\t' + 'Misc: ' + str(msg['misc']) + ' |'
         outmsg += '\t' + 'Incollection: ' + str(msg['incollect'])
         outmsg += ')'
+        self.tidybib_window['-OutMsg-'].Update('')
         self.tidybib_window['-OutMsg-'].Update(outmsg)
 
 if __name__ == '__main__':
