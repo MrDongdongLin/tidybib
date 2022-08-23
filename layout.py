@@ -7,7 +7,7 @@ class TidyBIBLayout(ABC):
 
     def __init__(self):
         self.theme = 'LightGreen'
-        self.font = 'Consolas'
+        self.font = 'Consolas'#'Andale Mono'
         self.font_size = 11
         self.event = dict()
         self.values = dict()
@@ -46,23 +46,24 @@ class TidyBIBLayout(ABC):
     def menus(self):
 
         sg.theme(self.theme)
-        sg.set_options(element_padding=(0, 0))
         font = (self.font, self.font_size)
+        sg.set_options(element_padding=(0, 0), font=font)
 
         # ------ Menu Definition ------ #
         menu_def = [['&File', ['&Open', '&Save', 'E&xit']],
                     ['&Edit', ['&Fields']],
+                    ['&View', '&Theme'],
                     ['&Help', '&About'], ]
 
         right_click_menu = ['Font', ['Font size', '!&Click', '&Menu', 'E&xit', 'Properties']]
 
         # ------ GUI Defintion ------ #
         layout = [  [sg.Menu(menu_def, tearoff=False, pad=(200, 1))],
-                    [sg.Multiline(size=(60,25), key='-Input-', expand_x=True, expand_y=True, font=font),
-                     sg.Multiline(size=(60,25), key='-Output-', expand_x=True, expand_y=True, font=font)],
+                    [sg.Multiline(size=(60,25), key='-Input-', expand_x=True, expand_y=True),
+                     sg.Multiline(size=(60,25), key='-Output-', expand_x=True, expand_y=True)],
                     [sg.Radio('Indent space', 'indent_space', key='ind_space',default=True),
                      sg.Radio('Indent tab', 'indent_space',key='ind_tab',default=False)],
-                    [sg.Multiline(size=(122,2), key='-OutMsg-', expand_x=True, expand_y=True, background_color='Gray', text_color='White', font=font)],
+                    [sg.Multiline(size=(122,2), key='-OutMsg-', expand_x=True, expand_y=True, background_color='Gray', text_color='White', default_text='Output message...')],
                     [sg.Input(visible=False, enable_events=True, key='-IN-'), sg.FilesBrowse(pad=(1,10)),
                      sg.Button('Tidy', pad=(10,10)), 
                      sg.InputText('', do_not_clear=False, visible=False, key='Filepath', enable_events=True),

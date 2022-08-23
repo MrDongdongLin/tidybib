@@ -1,7 +1,4 @@
 #!/usr/bin/env python
-import PySimpleGUI as sg
-from pathlib import Path
-from utils.parse import parses
 from utils.regs import BuildRegex
 from layout import TidyBIBLayout
 from tidyer import Tidyer
