@@ -60,6 +60,8 @@ class TidyBIBLayout(ABC):
         layout = [  [sg.Menu(menu_def, tearoff=False, pad=(200, 1))],
                     [sg.Multiline(size=(60,25), key='-Input-', expand_x=True, expand_y=True, font=font),
                      sg.Multiline(size=(60,25), key='-Output-', expand_x=True, expand_y=True, font=font)],
+                    [sg.Radio('Indent space', 'indent_space', key='ind_space',default=True),
+                     sg.Radio('Indent tab', 'indent_space',key='ind_tab',default=False)],
                     [sg.Multiline(size=(122,2), key='-OutMsg-', expand_x=True, expand_y=True, background_color='Gray', text_color='White', font=font)],
                     [sg.Input(visible=False, enable_events=True, key='-IN-'), sg.FilesBrowse(pad=(1,10)),
                      sg.Button('Tidy', pad=(10,10)), 

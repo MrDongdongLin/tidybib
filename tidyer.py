@@ -1,10 +1,11 @@
 import re
+from textwrap import indent
 
 
 class Tidyer():
-    def __init__(self):
+    def __init__(self, indent):
         self.outputs = []
-        self.indent = 'space'
+        self.indent = indent # 'space'
         self.spaces = 2
 
     def field_content(self, field, reg_field, reg_content, object_str):
@@ -135,6 +136,8 @@ class Tidyer():
                             journal_abbr = self.tidy_journal(key, value, item, regs)
                             if self.indent == 'space':
                                 new_journal_abbr = "{e:<{size}}{k:<14} {c},\n".format(e=' ', size=self.spaces, k=key+' =', c=journal_abbr)
+                            elif self.indent == 'tab':
+                                new_journal_abbr = "{e:<{size}}{k:<14} {c},\n".format(e='\t', size=1, k=key+' =', c=journal_abbr)
                             fout.append(new_journal_abbr)
                             # fout.write("  {:<14} {},\n".format(key + " =", journal_abbr))
                         elif key == "title":
@@ -142,7 +145,10 @@ class Tidyer():
                             content = content[0] + content[1].upper() + content[2:]
                             content = content[1:-1]
                             content = "{" + self.tidy_title(content) + "}"
-                            new_content = "{e:<{size}}{k:<14} {c},\n".format(e=' ', size=self.spaces, k=key+' =', c=content)
+                            if self.indent == 'space':
+                                new_content = "{e:<{size}}{k:<14} {c},\n".format(e=' ', size=self.spaces, k=key+' =', c=content)
+                            elif self.indent == 'tab':
+                                new_content = "{e:<{size}}{k:<14} {c},\n".format(e='\t', size=1, k=key+' =', c=content)
                             fout.append(new_content)
                             # fout.write("  {:<14} {},\n".format(key + " =", content))
                         else:
@@ -150,7 +156,10 @@ class Tidyer():
                             if content == "{}":
                                 continue
                             else:
-                                new_content = "{e:<{size}}{k:<14} {c},\n".format(e=' ', size=self.spaces, k=key+' =', c=content)
+                                if self.indent == 'space':
+                                    new_content = "{e:<{size}}{k:<14} {c},\n".format(e=' ', size=self.spaces, k=key+' =', c=content)
+                                elif self.indent == 'tab':
+                                    new_content = "{e:<{size}}{k:<14} {c},\n".format(e='\t', size=1, k=key+' =', c=content)
                                 fout.append(new_content)
                                 # fout.write("  {:<14} {},\n".format(key + " =", content))
                 fout.append("}\n\n")
@@ -174,7 +183,7 @@ class Tidyer():
         # write tidy bib file
         # global outputs
         self.outputs = []
-        for matchNum, match in enumerate(abbr_matches, start=1):
+        for _, match in enumerate(abbr_matches, start=1):
             item = match.group()
             abbr = re.sub("\n+", "", item)
             abbr = re.sub(" +", " ", abbr)

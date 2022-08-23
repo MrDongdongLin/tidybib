@@ -12,7 +12,6 @@ class TidyBIBApp(TidyBIBLayout):
     def __init__(self):
         TidyBIBLayout.__init__(self)
         self.base_cls = 'TidyBIB'
-        self.tidyer = Tidyer()
 
     def tidy_processor(self):
         bibin = ""
@@ -35,6 +34,10 @@ class TidyBIBApp(TidyBIBLayout):
         for lines in self.values['-Input-']:
             bibin = bibin + lines
         # window['-Output-'].Update(text)
+        if self.values['ind_space']:
+            self.tidyer = Tidyer(indent='space')
+        elif self.values['ind_tab']:
+            self.tidyer = Tidyer(indent='tab')
         outputs, msg = self.tidyer.tidyer(regs, bibin)
         mystr = ''
         for x in outputs:
