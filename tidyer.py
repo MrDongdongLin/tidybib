@@ -141,9 +141,9 @@ class Tidyer():
                             # fout.write("  {:<14} {},\n".format(key + " =", journal_abbr))
                         elif key == "title":
                             content = self.field_content(key, value, regs.outer_brace, item)
-                            content = content[0] + content[1].upper() + content[2:]
-                            content = content[1:-1]
-                            content = "{" + self.tidy_title(content) + "}"
+                            # content = content[0] + content[1].upper() + content[2:]
+                            # content = content[1:-1]
+                            # content = "{" + self.tidy_title(content) + "}"
                             if self.indent == 'space':
                                 new_content = "{e:<{size}}{k:<14} {c},\n".format(e=' ', size=self.spaces, k=key+' =', c=content)
                             elif self.indent == 'tab':

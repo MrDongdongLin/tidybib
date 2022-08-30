@@ -4,7 +4,6 @@ from layout import TidyBIBLayout
 from tidyer import Tidyer
 
 
-
 class TidyBIBApp(TidyBIBLayout):
     def __init__(self):
         TidyBIBLayout.__init__(self)
@@ -12,16 +11,16 @@ class TidyBIBApp(TidyBIBLayout):
 
     def tidy_processor(self):
         bibin = ""
-        regs = BuildRegex()                          # build regex
-        if self.custom_fileds:                       # custom fields not empty
+        regs = BuildRegex()  # build regex
+        if self.custom_fileds:  # custom fields not empty
             for k, v in self.custom_fileds.items():
-                if not v:                            # if the field is not selected
+                if not v:  # if the field is not selected
                     if k in regs.inproceedings_regex:
                         del regs.inproceedings_regex[k]
                     if k in regs.proceedings_regex:
                         del regs.proceedings_regex[k]
                     if k in regs.misc_regex:
-                        del regs.misc_regex[k] 
+                        del regs.misc_regex[k]
                     if k in regs.book_regex:
                         del regs.book_regex[k]
                     if k in regs.article_regex:
@@ -38,8 +37,8 @@ class TidyBIBApp(TidyBIBLayout):
         outputs, msg = self.tidyer.tidyer(regs, bibin)
         mystr = ''
         for x in outputs:
-            mystr += ''+x
-        
+            mystr += '' + x
+
         self.tidybib_window['-Output-'].Update('')
         self.tidybib_window['-Output-'].Update(mystr)
         # print(outputs)
@@ -55,8 +54,7 @@ class TidyBIBApp(TidyBIBLayout):
         self.tidybib_window['-OutMsg-'].Update('')
         self.tidybib_window['-OutMsg-'].Update(outmsg)
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     tidybib_app = TidyBIBApp()
     tidybib_app.event_processor()
-

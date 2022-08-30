@@ -26,15 +26,15 @@ class TidyBIBLayout(ABC):
     def edit_fields():
         layout = [ [sg.Checkbox('Author',key='author',default=True), 
                     sg.Checkbox('Title',key='title',default=True),
-                    sg.Checkbox('Booktitle',key='booktitle'),
+                    sg.Checkbox('Booktitle',key='booktitle',default=True),
                     sg.Checkbox('Year',key='year',default=True),
                     sg.Checkbox('Editor',key='editor'),
-                    sg.Checkbox('Volume',key='volume')],
+                    sg.Checkbox('Volume',key='volume',default=True)],
                    [sg.Checkbox('Number',key='number',default=True),
                     sg.Checkbox('Series',key='series'),
                     sg.Checkbox('Pages',key='pages',default=True),
                     sg.Checkbox('Publisher',key='publisher'),
-                    sg.Checkbox('DOI',key='doi')],
+                    sg.Checkbox('DOI',key='doi',default=True)],
                    [sg.Button('Save', pad=(1,10))]
                     ]
 
