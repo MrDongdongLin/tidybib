@@ -107,7 +107,7 @@ class Tidyer():
                         title_content = self.field_content(key, value, regs.outer_brace, item)
                         inner_title = re.finditer(regs.outer_brace, title_content)
                         innertitle = next(inner_title).group()
-                        first_characters = [i[0] for i in innertitle.split()]
+                        first_characters = [i[0] if str.isalpha(i[0]) else i[1] for i in innertitle.split()]
                         if len(first_characters) >= 5:
                             for i in range(5):
                                 contraction_title = contraction_title + first_characters[i]
@@ -127,6 +127,10 @@ class Tidyer():
                     elif key == "head":
                         content = re.finditer(value, item, re.MULTILINE | re.IGNORECASE)
                         head_content = next(content).group()
+                        if regs.tidyid:
+                            head_content = head_content + id_head + ","
+                        else:
+                            head_content = head_content
                         new_head = re.sub(" +", "", head_content)
                         new_head = new_head + '\n'
                         fout.append(new_head)

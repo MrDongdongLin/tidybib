@@ -7,36 +7,36 @@ class TidyBIBLayout(ABC):
 
     def __init__(self):
         self.theme = 'LightGreen'
-        self.font = 'Consolas'#'Andale Mono'
+        self.font = 'Consolas'  # 'Andale Mono'
         self.font_size = 11
         self.event = dict()
         self.values = dict()
         self.custom_fileds = dict()
         self.tidybib_window = dict()
-    
+
     @staticmethod
     def about():
         layout = [[sg.Text('tidybib')],
-                [sg.OK()]]
+                  [sg.OK()]]
 
         window = sg.Window('About tidybib', layout)
         window.close()
 
     @staticmethod
     def edit_fields():
-        layout = [ [sg.Checkbox('Author',key='author',default=True), 
-                    sg.Checkbox('Title',key='title',default=True),
-                    sg.Checkbox('Booktitle',key='booktitle',default=True),
-                    sg.Checkbox('Year',key='year',default=True),
-                    sg.Checkbox('Editor',key='editor'),
-                    sg.Checkbox('Volume',key='volume',default=True)],
-                   [sg.Checkbox('Number',key='number',default=True),
-                    sg.Checkbox('Series',key='series'),
-                    sg.Checkbox('Pages',key='pages',default=True),
-                    sg.Checkbox('Publisher',key='publisher'),
-                    sg.Checkbox('DOI',key='doi',default=True)],
-                   [sg.Button('Save', pad=(1,10))]
-                    ]
+        layout = [[sg.Checkbox('Author', key='author', default=True),
+                   sg.Checkbox('Title', key='title', default=True),
+                   sg.Checkbox('Booktitle', key='booktitle', default=True),
+                   sg.Checkbox('Year', key='year', default=True),
+                   sg.Checkbox('Editor', key='editor'),
+                   sg.Checkbox('Volume', key='volume', default=True)],
+                  [sg.Checkbox('Number', key='number', default=True),
+                   sg.Checkbox('Series', key='series'),
+                   sg.Checkbox('Pages', key='pages', default=True),
+                   sg.Checkbox('Publisher', key='publisher'),
+                   sg.Checkbox('DOI', key='doi', default=True)],
+                  [sg.Button('Save', pad=(1, 10))]
+                  ]
 
         window = sg.Window('Select fields', layout)
         _, values = window.read()
@@ -58,28 +58,30 @@ class TidyBIBLayout(ABC):
         right_click_menu = ['Font', ['Font size', '!&Click', '&Menu', 'E&xit', 'Properties']]
 
         # ------ GUI Defintion ------ #
-        layout = [  [sg.Menu(menu_def, tearoff=False, pad=(200, 1))],
-                    [sg.Multiline(size=(60,25), key='-Input-', expand_x=True, expand_y=True),
-                     sg.Multiline(size=(60,25), key='-Output-', expand_x=True, expand_y=True)],
-                    [sg.Radio('Indent space', 'indent_space', key='ind_space',default=True),
-                     sg.Radio('Indent tab', 'indent_space',key='ind_tab',default=False)],
-                    [sg.Multiline(size=(122,2), key='-OutMsg-', expand_x=True, expand_y=True, background_color='Gray', text_color='White', default_text='Output message...')],
-                    [sg.Input(visible=False, enable_events=True, key='-IN-'), sg.FilesBrowse(pad=(1,10)),
-                     sg.Button('Tidy', pad=(10,10)), 
-                     sg.InputText('', do_not_clear=False, visible=False, key='Filepath', enable_events=True),
-                     sg.FileSaveAs(initial_folder='./bibfile',pad=(10,10)), 
-                     sg.Button('Exit', pad=(10,10))]
-        ]
+        layout = [[sg.Menu(menu_def, tearoff=False, pad=(200, 1))],
+                  [sg.Multiline(size=(60, 25), key='-Input-', expand_x=True, expand_y=True),
+                   sg.Multiline(size=(60, 25), key='-Output-', expand_x=True, expand_y=True)],
+                  [sg.Radio('Indent space', 'indent_space', key='ind_space', default=True),
+                   sg.Radio('Indent tab', 'indent_space', key='ind_tab', default=False),
+                   sg.Checkbox('TidyID', key='tidyid', default=False)],
+                  [sg.Multiline(size=(122, 2), key='-OutMsg-', expand_x=True, expand_y=True, background_color='Gray',
+                                text_color='White', default_text='Output message...')],
+                  [sg.Input(visible=False, enable_events=True, key='-IN-'), sg.FilesBrowse(pad=(1, 10)),
+                   sg.Button('Tidy', pad=(10, 10)),
+                   sg.InputText('', do_not_clear=False, visible=False, key='Filepath', enable_events=True),
+                   sg.FileSaveAs(initial_folder='./bibfile', pad=(10, 10)),
+                   sg.Button('Exit', pad=(10, 10))]
+                  ]
 
         window = sg.Window("Tidybib",
-                        layout,
-                        default_element_size=(12, 1),
-                        default_button_element_size=(12, 1),
-                        right_click_menu=right_click_menu,
-                        resizable=True)
-        
+                           layout,
+                           default_element_size=(12, 1),
+                           default_button_element_size=(12, 1),
+                           right_click_menu=right_click_menu,
+                           resizable=True)
+
         return window
-    
+
     def event_processor(self):
         self.tidybib_window = self.menus()
         # ------ Loop & Process button menu choices ------ #

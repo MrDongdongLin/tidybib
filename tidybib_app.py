@@ -11,7 +11,10 @@ class TidyBIBApp(TidyBIBLayout):
 
     def tidy_processor(self):
         bibin = ""
-        regs = BuildRegex()  # build regex
+        object_regs = BuildRegex()  # build regex
+        if self.values['tidyid']:
+            object_regs.tidyid = True
+        regs = object_regs.call()
         if self.custom_fileds:  # custom fields not empty
             for k, v in self.custom_fileds.items():
                 if not v:  # if the field is not selected
@@ -38,7 +41,6 @@ class TidyBIBApp(TidyBIBLayout):
         mystr = ''
         for x in outputs:
             mystr += '' + x
-
         self.tidybib_window['-Output-'].Update('')
         self.tidybib_window['-Output-'].Update(mystr)
         # print(outputs)

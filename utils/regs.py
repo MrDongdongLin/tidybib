@@ -7,8 +7,9 @@ from .parse import parses
 class BuildRegex():
 
     def __init__(self):
-        a = parses()
+        self.tidyid = False
 
+    def call(self):
         self.comments = r"(%.*)"
         self.abbr = r"(@string{[\s\S]*?})(?=[ \\\n]*[@%])"
         self.inproceedings = r"(@inproceedings{[\s\S]*?})(?=[ \\\n]*[@%])"
@@ -18,7 +19,7 @@ class BuildRegex():
         self.book = r"(@book{[\s\S]*?})(?=[ \\\n]*[@%])"
         self.incollection = r"(@incollection{[\s\S]*?})(?=[ \\\n]*[@%])"
         # head of each item
-        if a.tidyid == "yes":
+        if self.tidyid:
             self.head_inproceedings = r"(@inproceedings{)"
             self.head_proceedings = r"(@proceedings{)"
             self.head_misc = r"(@misc{)"
@@ -156,3 +157,5 @@ class BuildRegex():
             "pages": self.pages,
             "year": self.year
         }
+
+        return self
