@@ -59,16 +59,16 @@ class TidyBIBLayout(ABC):
 
         # ------ GUI Defintion ------ #
         layout = [[sg.Menu(menu_def, tearoff=False, pad=(200, 1))],
-                  [sg.Multiline(size=(60, 25), key='-Input-', expand_x=True, expand_y=True),
-                   sg.Multiline(size=(60, 25), key='-Output-', expand_x=True, expand_y=True)],
+                  [sg.Multiline(size=(60, 25), key='input', expand_x=True, expand_y=True),
+                   sg.Multiline(size=(60, 25), key='output', expand_x=True, expand_y=True)],
                   [sg.Radio('Indent space', 'indent_space', key='ind_space', default=True),
                    sg.Radio('Indent tab', 'indent_space', key='ind_tab', default=False),
                    sg.Checkbox('TidyID', key='tidyid', default=False)],
-                  [sg.Multiline(size=(122, 2), key='-OutMsg-', expand_x=True, expand_y=True, background_color='Gray',
+                  [sg.Multiline(size=(122, 2), key='outmsg', expand_x=True, expand_y=True, background_color='Gray',
                                 text_color='White', default_text='Output message...')],
-                  [sg.Input(visible=False, enable_events=True, key='-IN-'), sg.FilesBrowse(pad=(1, 10)),
+                  [sg.Input(visible=False, enable_events=True, key='browsein'), sg.FilesBrowse(pad=(1, 10)),
                    sg.Button('Tidy', pad=(10, 10)),
-                   sg.InputText('', do_not_clear=False, visible=False, key='Filepath', enable_events=True),
+                   sg.InputText('', do_not_clear=False, visible=False, key='saveas', enable_events=True),
                    sg.FileSaveAs(initial_folder='./bibfile', pad=(10, 10)),
                    sg.Button('Exit', pad=(10, 10))]
                   ]
@@ -98,23 +98,23 @@ class TidyBIBLayout(ABC):
                     try:
                         with open(filename, "r", encoding='utf-8') as f:
                             text = f.read()
-                        self.tidybib_window['-Input-'].Update('')
-                        self.tidybib_window['-Input-'].Update(text)
+                        self.tidybib_window['input'].Update('')
+                        self.tidybib_window['input'].Update(text)
                     except Exception as e:
                         print("Error: ", e)
-            elif self.event == '-IN-':
-                filename = self.values['-IN-']
+            elif self.event == 'browsein':
+                filename = self.values['browsein']
                 if Path(filename).is_file():
                     try:
                         with open(filename, "r", encoding='utf-8') as f:
                             text = f.read()
-                        self.tidybib_window['-Input-'].Update('')
-                        self.tidybib_window['-Input-'].Update(text)
+                        self.tidybib_window['input'].Update('')
+                        self.tidybib_window['input'].Update(text)
                     except Exception as e:
                         print("Error: ", e)
-            elif self.event == 'Filepath':
-                with open(self.values['Filepath'], "wt", encoding='UTF-8') as f:
-                    f.write(self.tidybib_window['-Output-'].get())
+            elif self.event == 'saveas':
+                with open(self.values['saveas'], "wt", encoding='UTF-8') as f:
+                    f.write(self.tidybib_window['output'].get())
             elif self.event == 'Fields':
                 self.custom_fileds = self.edit_fields()
                 # print(self.custom_fileds)

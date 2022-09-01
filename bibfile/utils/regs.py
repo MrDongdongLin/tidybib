@@ -4,12 +4,11 @@ from .parse import parses
 # we define some regex below
 # item patterns
 
-class TidyBIBRegex():
+class BuildRegex():
 
     def __init__(self):
-        self.tidyid = False
+        a = parses()
 
-    def build_regex(self):
         self.comments = r"(%.*)"
         self.abbr = r"(@string{[\s\S]*?})(?=[ \\\n]*[@%])"
         self.inproceedings = r"(@inproceedings{[\s\S]*?})(?=[ \\\n]*[@%])"
@@ -19,7 +18,7 @@ class TidyBIBRegex():
         self.book = r"(@book{[\s\S]*?})(?=[ \\\n]*[@%])"
         self.incollection = r"(@incollection{[\s\S]*?})(?=[ \\\n]*[@%])"
         # head of each item
-        if self.tidyid:
+        if a.tidyid == "yes":
             self.head_inproceedings = r"(@inproceedings{)"
             self.head_proceedings = r"(@proceedings{)"
             self.head_misc = r"(@misc{)"
@@ -44,7 +43,7 @@ class TidyBIBRegex():
         # field patterns
         self.author = r"(?<!\w)(author)(?=[= ])([\s\S]*?)([}\"],).*(?=( |\n))"
         self.title = r"(?<!\w)(title)(?=[= ])([\s\S]*?)([}\"],).*(?=( |\n))"
-        self.journal = r"(?<!\w)(journal)(?=[= ])([\s\S]*?)(,).*(?=( |\n))"
+        self.journal = r"(?<!\w)(journal)(?=[= ])([\s\S]*?)([}\"],).*(?=( |\n))"
         self.year = r"(?<!\w)(year)(?=[= ])([\s\S]*?)([}\"],).*(?=( |\n))"
         self.volume = r"(?<!\w)(volume)(?=[= ])([\s\S]*?)([}\"],).*(?=( |\n))"
         self.number = r"(?<!\w)(number)(?=.*=)([\s\S]*?)([}\"],).*(?=( |\n))"
@@ -63,7 +62,7 @@ class TidyBIBRegex():
         # other match
         self.outer_brace = r"(?<=[{\"])([\s\S]*)(?=[}\"])"
         self.inner_brace = r"(?<=[{\"])[^{]([^{}]+)[^}](?=[}\"])"
-        self.head_author = r"(?<={)(\S+)(?=,|\W)"
+        self.head_author = r"(?<={)([a-zA-Z]*)(?=\W)"
         self.inner_year = r"(?<={)(\d*)(?=})"
         # upper cases, add more defines in the future
         self.uppercases = ['IEEE', 'IETE', 'ACM']

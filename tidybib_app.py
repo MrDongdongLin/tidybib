@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from utils.regs import BuildRegex
+from utils.regs import TidyBIBRegex
 from layout import TidyBIBLayout
 from tidyer import Tidyer
 
@@ -11,10 +11,10 @@ class TidyBIBApp(TidyBIBLayout):
 
     def tidy_processor(self):
         bibin = ""
-        object_regs = BuildRegex()  # build regex
+        regs = TidyBIBRegex()  # build regex
         if self.values['tidyid']:
-            object_regs.tidyid = True
-        regs = object_regs.call()
+            regs.tidyid = True
+        regs.build_regex()
         if self.custom_fileds:  # custom fields not empty
             for k, v in self.custom_fileds.items():
                 if not v:  # if the field is not selected
@@ -30,9 +30,9 @@ class TidyBIBApp(TidyBIBLayout):
                         del regs.article_regex[k]
                     if k in regs.incollection_regex:
                         del regs.incollection_regex[k]
-        for lines in self.values['-Input-']:
+        for lines in self.values['input']:
             bibin = bibin + lines
-        # window['-Output-'].Update(text)
+        # window['output'].Update(text)
         if self.values['ind_space']:
             self.tidyer = Tidyer(indent='space')
         elif self.values['ind_tab']:
@@ -41,11 +41,11 @@ class TidyBIBApp(TidyBIBLayout):
         mystr = ''
         for x in outputs:
             mystr += '' + x
-        self.tidybib_window['-Output-'].Update('')
-        self.tidybib_window['-Output-'].Update(mystr)
+        self.tidybib_window['output'].Update('')
+        self.tidybib_window['output'].Update(mystr)
         # print(outputs)
         outmsg = ''
-        outmsg += 'Total bib tiems: ' + str(msg['total']) + ' ('
+        outmsg += 'Total bib items: ' + str(msg['total']) + ' ('
         outmsg += 'Article: ' + str(msg['article']) + ' |'
         outmsg += '\t' + 'Inproceedings: ' + str(msg['inproc']) + ' |'
         outmsg += '\t' + 'Proceedings: ' + str(msg['proc']) + ' |'
@@ -53,8 +53,8 @@ class TidyBIBApp(TidyBIBLayout):
         outmsg += '\t' + 'Misc: ' + str(msg['misc']) + ' |'
         outmsg += '\t' + 'Incollection: ' + str(msg['incollect'])
         outmsg += ')'
-        self.tidybib_window['-OutMsg-'].Update('')
-        self.tidybib_window['-OutMsg-'].Update(outmsg)
+        self.tidybib_window['outmsg'].Update('')
+        self.tidybib_window['outmsg'].Update(outmsg)
 
 
 if __name__ == '__main__':
