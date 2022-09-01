@@ -8,6 +8,7 @@ class TidyBIBLayout(ABC):
     def __init__(self):
         self.theme = 'LightGreen'
         self.font = 'Consolas'  # 'Andale Mono'
+        self.about_info = 'Tidybib version 1.0.0'
         self.font_size = 11
         self.event = dict()
         self.values = dict()
@@ -15,8 +16,8 @@ class TidyBIBLayout(ABC):
         self.tidybib_window = dict()
 
     @staticmethod
-    def about():
-        layout = [[sg.Text('tidybib')],
+    def about(self):
+        layout = [[sg.Text(self.about_info)],
                   [sg.OK()]]
 
         window = sg.Window('About tidybib', layout)

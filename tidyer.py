@@ -4,10 +4,10 @@ import re
 class Tidyer():
     def __init__(self, indent):
         self.outputs = []
-        self.indent = indent # 'space'
+        self.indent = indent  # 'space'
         self.spaces = 2
 
-    def field_content(self, field, reg_field, reg_content, object_str):
+    def field_content(self, reg_field, reg_content, object_str):
         match_field = re.finditer(reg_field, object_str, re.MULTILINE | re.IGNORECASE)
         try:
             next_match = next(match_field).group()
@@ -25,7 +25,7 @@ class Tidyer():
                     # content = "{" + content[0].upper() + content[1:] + "}"
             else:
                 content = "{}"
-            
+
         except StopIteration:
             content = "{}"
 
@@ -41,10 +41,9 @@ class Tidyer():
             title = title
         return title
 
-
-    def tidy_journal(self, regex, str_journal, item, regs):
+    def tidy_journal(self, str_journal, item, regs):
         journal_abbr = ""
-        content = self.field_content(regex, str_journal, regs.outer_brace, item)
+        content = self.field_content(str_journal, regs.outer_brace, item)
         inner_journal = re.finditer(regs.outer_brace, content)
         journal_name = next(inner_journal).group()
         journal_list = [i for i in journal_name.split()]
@@ -83,7 +82,6 @@ class Tidyer():
 
         return journal_abbr
 
-
     def tidy_item(self, regex, object_str, fout, regs):
         # output_str = [] # TODO: we can buffer the tidy item and write them out afterwards
         matches = re.finditer(regex["item"], object_str, re.MULTILINE | re.IGNORECASE)
@@ -98,13 +96,13 @@ class Tidyer():
                 # extract head from author, title and year, e.g. Lin:ISEA:2017
                 for key, value in regex.items():
                     if key == "author":
-                        author_content = self.field_content(key, value, regs.outer_brace, item)
+                        author_content = self.field_content(value, regs.outer_brace, item)
                         first_author = re.finditer(regs.head_author, author_content)
                         first_author_name = next(first_author).group()
                         id_head = id_head + first_author_name
                     if key == "title":
                         contraction_title = ""
-                        title_content = self.field_content(key, value, regs.outer_brace, item)
+                        title_content = self.field_content(value, regs.outer_brace, item)
                         inner_title = re.finditer(regs.outer_brace, title_content)
                         innertitle = next(inner_title).group()
                         first_characters = [i[0] if str.isalpha(i[0]) else i[1] for i in innertitle.split()]
@@ -116,13 +114,13 @@ class Tidyer():
                                 contraction_title = contraction_title + first_characters[i]
                         id_head = id_head + ":" + contraction_title
                     if key == "year":
-                        year_content = self.field_content(key, value, regs.outer_brace, item)
+                        year_content = self.field_content(value, regs.outer_brace, item)
                         first_year = re.finditer(regs.inner_year, year_content)
                         inneryear = next(first_year).group()
                         id_head = id_head + ":" + inneryear
                 # write file
                 for key, value in regex.items():
-                    if key == "item" or len(value)==0:
+                    if key == "item" or len(value) == 0:
                         continue
                     elif key == "head":
                         content = re.finditer(value, item, re.MULTILINE | re.IGNORECASE)
@@ -136,33 +134,39 @@ class Tidyer():
                         fout.append(new_head)
                     else:
                         if key == "journal" or key == "booktitle":
-                            journal_abbr = self.tidy_journal(key, value, item, regs)
+                            journal_abbr = self.tidy_journal(value, item, regs)
                             if self.indent == 'space':
-                                new_journal_abbr = "{e:<{size}}{k:<14} {c},\n".format(e=' ', size=self.spaces, k=key+' =', c=journal_abbr)
+                                new_journal_abbr = "{e:<{size}}{k:<14} {c},\n".format(e=' ', size=self.spaces,
+                                                                                      k=key + ' =', c=journal_abbr)
                             elif self.indent == 'tab':
-                                new_journal_abbr = "{e:<{size}}{k:<14} {c},\n".format(e='\t', size=1, k=key+' =', c=journal_abbr)
+                                new_journal_abbr = "{e:<{size}}{k:<14} {c},\n".format(e='\t', size=1, k=key + ' =',
+                                                                                      c=journal_abbr)
                             fout.append(new_journal_abbr)
                             # fout.write("  {:<14} {},\n".format(key + " =", journal_abbr))
                         elif key == "title":
-                            content = self.field_content(key, value, regs.outer_brace, item)
+                            content = self.field_content(value, regs.outer_brace, item)
                             # content = content[0] + content[1].upper() + content[2:]
                             # content = content[1:-1]
                             # content = "{" + self.tidy_title(content) + "}"
                             if self.indent == 'space':
-                                new_content = "{e:<{size}}{k:<14} {c},\n".format(e=' ', size=self.spaces, k=key+' =', c=content)
+                                new_content = "{e:<{size}}{k:<14} {c},\n".format(e=' ', size=self.spaces, k=key + ' =',
+                                                                                 c=content)
                             elif self.indent == 'tab':
-                                new_content = "{e:<{size}}{k:<14} {c},\n".format(e='\t', size=1, k=key+' =', c=content)
+                                new_content = "{e:<{size}}{k:<14} {c},\n".format(e='\t', size=1, k=key + ' =',
+                                                                                 c=content)
                             fout.append(new_content)
                             # fout.write("  {:<14} {},\n".format(key + " =", content))
                         else:
-                            content = self.field_content(key, value, regs.outer_brace, item)
+                            content = self.field_content(value, regs.outer_brace, item)
                             if content == "{}":
                                 continue
                             else:
                                 if self.indent == 'space':
-                                    new_content = "{e:<{size}}{k:<14} {c},\n".format(e=' ', size=self.spaces, k=key+' =', c=content)
+                                    new_content = "{e:<{size}}{k:<14} {c},\n".format(e=' ', size=self.spaces,
+                                                                                     k=key + ' =', c=content)
                                 elif self.indent == 'tab':
-                                    new_content = "{e:<{size}}{k:<14} {c},\n".format(e='\t', size=1, k=key+' =', c=content)
+                                    new_content = "{e:<{size}}{k:<14} {c},\n".format(e='\t', size=1, k=key + ' =',
+                                                                                     c=content)
                                 fout.append(new_content)
                                 # fout.write("  {:<14} {},\n".format(key + " =", content))
                 fout.append("}\n\n")
@@ -171,7 +175,6 @@ class Tidyer():
             except StopIteration:
                 break
         return counter
-
 
     def tidyer(self, regs, bibin):
 
@@ -209,10 +212,10 @@ class Tidyer():
 
         count = numInproceed + numProceed + numMisc + numBook + numArticle + numIncollection
 
-        return self.outputs, {'total': count, 
-                'inproc': numInproceed, 
-                'proc': numProceed, 
-                'misc': numMisc, 
-                'book': numBook,
-                'article': numArticle,
-                'incollect': numIncollection}
+        return self.outputs, {'total': count,
+                              'inproc': numInproceed,
+                              'proc': numProceed,
+                              'misc': numMisc,
+                              'book': numBook,
+                              'article': numArticle,
+                              'incollect': numIncollection}
