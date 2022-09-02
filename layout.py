@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 class TidyBIBLayout(ABC):
 
     def __init__(self):
+        self.mline = None
         self.theme = 'LightGreen'
         self.font = 'Consolas'  # 'Andale Mono'
         self.about_info = 'Tidybib version 1.0.0'
@@ -56,7 +57,7 @@ class TidyBIBLayout(ABC):
                     ['&View', '&Theme'],
                     ['&Help', '&About'], ]
 
-        right_click_menu = ['Font', ['Font size', '!&Click', '&Menu', 'E&xit', 'Properties']]
+        right_click_menu = ['', ['Copy', 'Paste', 'Select All', 'Cut']]
 
         # ------ GUI Defintion ------ #
         layout = [[sg.Menu(menu_def, tearoff=False, pad=(200, 1))],
@@ -81,6 +82,8 @@ class TidyBIBLayout(ABC):
                            right_click_menu=right_click_menu,
                            resizable=True)
 
+        self.mline: sg.Multiline = window['input']
+
         return window
 
     def event_processor(self):
@@ -93,6 +96,26 @@ class TidyBIBLayout(ABC):
             # ------ Process menu choices ------ #
             if self.event == 'About':
                 self.about()
+            elif self.event == 'Select All':
+                self.mline.Widget.selection_clear()
+                self.mline.Widget.tag_add('sel', '1.0', 'end')
+            elif self.event == 'Copy':
+                try:
+                    text = self.mline.Widget.selection_get()
+                    self.tidybib_window.TKroot.clipboard_clear()
+                    self.tidybib_window.TKroot.clipboard_append(text)
+                except:
+                    print('Nothing selected')
+            elif self.event == 'Paste':
+                self.mline.Widget.insert(sg.tk.INSERT, self.tidybib_window.TKroot.clipboard_get())
+            elif self.event == 'Cut':
+                try:
+                    text = self.mline.Widget.selection_get()
+                    self.tidybib_window.TKroot.clipboard_clear()
+                    self.tidybib_window.TKroot.clipboard_append(text)
+                    self.tidybib_window.update('')
+                except:
+                    print('Nothing selected')
             elif self.event == 'Open':
                 filename = sg.popup_get_file('file to open', no_window=True)
                 if Path(filename).is_file():
