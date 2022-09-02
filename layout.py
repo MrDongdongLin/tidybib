@@ -16,12 +16,12 @@ class TidyBIBLayout(ABC):
         self.custom_fileds = dict()
         self.tidybib_window = dict()
 
-    @staticmethod
     def about(self):
         layout = [[sg.Text(self.about_info)],
                   [sg.OK()]]
 
         window = sg.Window('About tidybib', layout)
+        window.read()
         window.close()
 
     @staticmethod
