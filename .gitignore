@@ -10,3 +10,7 @@ tidy_t.bib
 tidybib_app.exe
 tidybib_app.zip
 tidybib.py
+build/*
+dist/
+.vscode/
+tidybib_new.spec
