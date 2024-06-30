@@ -24,6 +24,19 @@ body {
     box-sizing: border-box;
 }
 
+.header {
+    padding: 10px;
+    background-color: #6200ea;
+    color: white;
+    text-align: center;
+    border-radius: 8px 8px 0 0;
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 24px;
+}
+
 .main-frame {
     flex: 1;
     display: flex;
@@ -67,8 +80,18 @@ body {
 }
 
 .button-group button {
-    padding: 6px 12px;
+    padding: 10px 20px;
     font-size: 14px;
+    background-color: #6200ea;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.button-group button:hover {
+    background-color: #3700b3;
 }
 
 .output-message {

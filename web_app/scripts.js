@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveButton = document.getElementById('save-button');
     const exitButton = document.getElementById('exit-button');
     const outputMessage = document.getElementById('output-message');
+    let originalFileName = '';
 
     browseButton.addEventListener('click', () => {
         fileInput.click();
@@ -15,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     fileInput.addEventListener('change', (event) => {
         const file = event.target.files[0];
         if (file) {
+            originalFileName = file.name.split('.')[0]; // Store the original file name without extension
             const reader = new FileReader();
             reader.onload = (e) => {
                 textLeft.value = e.target.result;
@@ -41,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'tidy.bib';
+        a.download = `tidy-${originalFileName}.bib`; // Set the file name for download
         a.click();
         URL.revokeObjectURL(url);
         outputMessage.value += 'Saved file.\n';
@@ -52,15 +54,26 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function simplifyBib(content) {
-        const prepositions = new Set(['of', 'the', 'and', 'in', 'on', 'for', 'with', 'a', 'an', 'by', 'at', 'to']);
-        const specialWords = new Set(['IEEE', 'ACM', 'IEEE/ACM']);
         const bibDatabase = bibtexParse.toJSON(content);
         const fieldOrder = ['author', 'title', 'journal', 'year', 'volume', 'number', 'pages', 'month', 'note', 'abstract', 'keywords', 'source', 'doi'];
         let formattedBib = '';
 
+        console.log('BibTeX Database:', bibDatabase);
+
         for (const entry of bibDatabase) {
+            // Ensure all entryTags keys are lower case
+            const entryTags = {};
+            for (const [key, value] of Object.entries(entry.entryTags || {})) {
+                entryTags[key.toLowerCase()] = value;
+            }
+            entry.entryTags = entryTags;
+
+            console.log('Processing entry:', entry);
+
             if (entry.entryTags.journal) {
+                console.log('Journal before capitalization:', entry.entryTags.journal);
                 entry.entryTags.journal = capitalizeTitle(entry.entryTags.journal);
+                console.log('Journal after capitalization:', entry.entryTags.journal);
             }
 
             // Generate the ID
@@ -86,25 +99,30 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getTitlePart(title) {
+        if (!title) return 'notitle';
         const words = title.split(' ');
         const initials = words.slice(0, 5).map(word => {
             let initial = word[0];
             if (initial === '{' && word.length > 1) {
                 initial = word[1];
             }
-            return initial.toUpperCase();
+            return initial ? initial.toUpperCase() : '';
         });
+        console.log('Title initials:', initials);
         return initials.join('');
     }
 
     function capitalizeTitle(title) {
+        if (!title) return '';
         const prepositions = new Set(['of', 'the', 'and', 'in', 'on', 'for', 'with', 'a', 'an', 'by', 'at', 'to']);
         const specialWords = new Set(['IEEE', 'ACM', 'IEEE/ACM']);
-        return title.split(' ').map(word => {
+        const capitalizedTitle = title.split(' ').map(word => {
             if (word.startsWith('{') && word.endsWith('}')) return word;
             if (specialWords.has(word)) return word;
             if (prepositions.has(word.toLowerCase())) return word.toLowerCase();
             return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
         }).join(' ');
+        console.log('Capitalized Title:', capitalizedTitle);
+        return capitalizedTitle;
     }
 });
