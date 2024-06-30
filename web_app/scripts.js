@@ -6,8 +6,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const tidyButton = document.getElementById('tidy-button');
     const saveButton = document.getElementById('save-button');
     const exitButton = document.getElementById('exit-button');
+    const applyAbbreviation = document.getElementById('abbreviate-checkbox');
+    const darkModeToggle = document.getElementById('dark-mode-toggle');
     const outputMessage = document.getElementById('output-message');
+
     let originalFileName = '';
+
+    console.log('Loaded journal abbreviations:', journalAbbreviations);
 
     browseButton.addEventListener('click', () => {
         fileInput.click();
@@ -16,10 +21,11 @@ document.addEventListener('DOMContentLoaded', () => {
     fileInput.addEventListener('change', (event) => {
         const file = event.target.files[0];
         if (file) {
-            originalFileName = file.name.split('.')[0]; // Store the original file name without extension
+            originalFileName = file.name.split('.')[0];
             const reader = new FileReader();
             reader.onload = (e) => {
                 textLeft.value = e.target.result;
+                applyHighlighting(); // 应用高亮显示
                 outputMessage.value = `Loaded file: ${file.name}\n`;
             };
             reader.readAsText(file);
@@ -29,11 +35,13 @@ document.addEventListener('DOMContentLoaded', () => {
     tidyButton.addEventListener('click', () => {
         try {
             const content = textLeft.value;
-            const simplifiedContent = simplifyBib(content);
+            console.log("Original Content:", content);
+            const simplifiedContent = simplifyBib(content, applyAbbreviation.checked);
             textRight.value = simplifiedContent;
+            applyHighlighting(); // 应用高亮显示
             outputMessage.value += 'Tidied content.\n';
         } catch (e) {
-            alert(`Failed to tidy content: ${e.message}`);
+            console.error(`Failed to tidy content: ${e.message}`);
             outputMessage.value += `Failed to tidy content: ${e.message}\n`;
         }
     });
@@ -43,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `tidy-${originalFileName}.bib`; // Set the file name for download
+        a.download = `tidy-${originalFileName}.bib`;
         a.click();
         URL.revokeObjectURL(url);
         outputMessage.value += 'Saved file.\n';
@@ -53,30 +61,55 @@ document.addEventListener('DOMContentLoaded', () => {
         window.close();
     });
 
-    function simplifyBib(content) {
-        const bibDatabase = bibtexParse.toJSON(content);
+    darkModeToggle.addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+        darkModeToggle.textContent = document.body.classList.contains('dark-mode') ? 'Toggle Light Mode' : 'Toggle Dark Mode';
+    });
+
+    document.querySelectorAll('.copy-button').forEach(button => {
+        button.addEventListener('click', () => {
+            const targetId = button.getAttribute('data-target');
+            const targetTextArea = document.getElementById(targetId);
+            if (targetTextArea) {
+                navigator.clipboard.writeText(targetTextArea.value).then(() => {
+                    button.textContent = 'Copied!';
+                    setTimeout(() => {
+                        button.textContent = 'Copy';
+                    }, 2000); // 2 seconds later, reset the button text
+                }).catch(err => {
+                    console.error('Failed to copy text: ', err);
+                });
+            }
+        });
+    });
+
+    function simplifyBib(content, applyAbbreviation) {
+        let bibDatabase;
+        try {
+            bibDatabase = bibtexParse.toJSON(content);
+            console.log("Parsed BibTeX:", bibDatabase);
+        } catch (error) {
+            console.error("Error parsing BibTeX content:", error);
+            throw new Error("Failed to parse BibTeX content");
+        }
+        
         const fieldOrder = ['author', 'title', 'journal', 'year', 'volume', 'number', 'pages', 'month', 'note', 'abstract', 'keywords', 'source', 'doi'];
         let formattedBib = '';
 
-        console.log('BibTeX Database:', bibDatabase);
-
         for (const entry of bibDatabase) {
-            // Ensure all entryTags keys are lower case
             const entryTags = {};
             for (const [key, value] of Object.entries(entry.entryTags || {})) {
                 entryTags[key.toLowerCase()] = value;
             }
             entry.entryTags = entryTags;
 
-            console.log('Processing entry:', entry);
-
             if (entry.entryTags.journal) {
-                console.log('Journal before capitalization:', entry.entryTags.journal);
                 entry.entryTags.journal = capitalizeTitle(entry.entryTags.journal);
-                console.log('Journal after capitalization:', entry.entryTags.journal);
+                if (applyAbbreviation) {
+                    entry.entryTags.journal = abbreviateJournal(entry.entryTags.journal);
+                }
             }
 
-            // Generate the ID
             let authorPart = '';
             if (entry.entryTags.author) {
                 const authorNames = entry.entryTags.author.split(',');
@@ -108,7 +141,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             return initial ? initial.toUpperCase() : '';
         });
-        console.log('Title initials:', initials);
         return initials.join('');
     }
 
@@ -122,7 +154,25 @@ document.addEventListener('DOMContentLoaded', () => {
             if (prepositions.has(word.toLowerCase())) return word.toLowerCase();
             return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
         }).join(' ');
-        console.log('Capitalized Title:', capitalizedTitle);
         return capitalizedTitle;
+    }
+
+    function abbreviateJournal(journal) {
+        const abbreviation = journalAbbreviations[journal];
+        console.log(`Journal: ${journal}, Abbreviation: ${abbreviation}`);
+        return abbreviation || journal;
+    }
+
+    function applyHighlighting() {
+        const textAreas = document.querySelectorAll('.highlight-bibtex');
+        textAreas.forEach(textArea => {
+            const content = textArea.value;
+            const highlightedContent = highlightBibtex(content);
+            const highlightedDiv = document.createElement('div');
+            highlightedDiv.className = 'highlighted-content';
+            highlightedDiv.innerHTML = highlightedContent;
+            textArea.style.display = 'none';
+            textArea.parentNode.insertBefore(highlightedDiv, textArea.nextSibling);
+        });
     }
 });

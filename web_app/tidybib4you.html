@@ -3,35 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TidyBib</title>
+    <title>TidyBib4You</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="highlightBibtex.css">
+    <script src="abbreviatelist.js"></script>
     <script src="bibtexParse.js"></script>
+    <script src="highlightBibtex.js"></script>
+    <script src="scripts.js"></script>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>TidyBib: BibTeX Formatter</h1>
-        </div>
-        <div class="main-frame">
-            <div class="text-frame">
-                <textarea id="text-left" class="text-area" placeholder="Paste your BibTeX here..."></textarea>
-                <textarea id="text-right" class="text-area" placeholder="Tidied BibTeX will appear here..."></textarea>
+        <div class="button-bar">
+            <input type="file" id="file-input" style="display: none;">
+            <button id="browse-button">Upload</button>
+            <button id="tidy-button">Tidy</button>
+            <button id="save-button">Save as bib</button>
+            <button id="exit-button">Exit</button>
+            <div class="checkbox-container">
+                <input type="checkbox" id="abbreviate-checkbox" class="styled-checkbox">
+                <label for="abbreviate-checkbox">Apply Journal Abbreviation</label>
             </div>
-            <div class="bottom-frame">
-                <div class="button-group">
-                    <button id="browse-button">Upload</button>
-                    <input type="file" id="file-input" style="display: none;">
-                    <button id="tidy-button">Tidy</button>
-                    <button id="save-button">Save as bib</button>
-                    <button id="exit-button">Exit</button>
-                </div>
-            </div>
-            <textarea id="output-message" class="output-message" readonly></textarea>
+            <button id="dark-mode-toggle">Toggle Dark Mode</button>
         </div>
-        <footer>
-            <p>Copyright dongdonglin8@gmail.com</p>
-        </footer>
+        <div class="editor">
+            <div class="textarea-container">
+                <textarea id="text-left" class="highlight-bibtex" placeholder="Input BibTeX here..."></textarea>
+                <div class="highlighted-content" id="highlighted-left"></div>
+                <button class="copy-button" data-target="text-left">Copy</button>
+            </div>
+            <div class="textarea-container">
+                <textarea id="text-right" class="highlight-bibtex" placeholder="Output will appear here..."></textarea>
+                <div class="highlighted-content" id="highlighted-right"></div>
+                <button class="copy-button" data-target="text-right">Copy</button>
+            </div>
+        </div>
+        <textarea id="output-message" readonly></textarea>
     </div>
-    <script src="scripts.js"></script>
 </body>
 </html>

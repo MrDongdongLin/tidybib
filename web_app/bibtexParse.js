@@ -154,7 +154,7 @@
                 } else if (this.months.indexOf(k.toLowerCase()) >= 0) {
                     return k.toLowerCase();
                 } else {
-                    throw "Value expected: single_value" + this.input.substring(start) + ' for key: ' + k;
+                    return k; // Modified to return key as-is for special characters
                 }
             }
         };
