@@ -21,11 +21,12 @@ function applyHighlighting() {
     textAreas.forEach(textArea => {
         const content = textArea.value;
         const highlightedContent = highlightBibtex(content);
-        const highlightedDiv = document.createElement('div');
+        const highlightedDiv = textArea.nextElementSibling || document.createElement('div');
         highlightedDiv.className = 'highlighted-content';
         highlightedDiv.innerHTML = highlightedContent;
-        textArea.style.display = 'none';
-        textArea.parentNode.insertBefore(highlightedDiv, textArea.nextSibling);
+        if (!textArea.nextElementSibling) {
+            textArea.parentNode.insertBefore(highlightedDiv, textArea.nextSibling);
+        }
     });
 }
 

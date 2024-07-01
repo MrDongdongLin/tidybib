@@ -84,21 +84,21 @@ body {
 .editor {
     display: flex;
     flex-grow: 1;
-    height: 100%;
+    height: calc(100% - 160px); /* Adjusted to leave space for output-message */
 }
 
 .textarea-container {
     position: relative;
-    width: 50%;
-    height: 600px;
-    overflow: hidden;
-    display: inline-block;
-    vertical-align: top;
+    flex: 1;
+    margin: 10px;
+    display: flex;
+    flex-direction: column;
 }
 
 .textarea-container textarea {
+    flex-grow: 1;
     width: 100%;
-    height: 100%;
+    height: calc(100% - 40px); /* Leave space for the copy button */
     box-sizing: border-box;
     resize: none;
     font-family: monospace;
@@ -114,42 +114,22 @@ body {
     white-space: pre-wrap;
     font-family: monospace;
     padding: 10px;
-}
-
-.highlighted-content code {
-    display: block;
-    white-space: pre;
-}
-
-.editor textarea {
-    flex-grow: 1;
-    padding: 20px;
-    border: none;
-    border-right: 1px solid #ddd;
-    outline: none;
-    resize: none;
-    font-size: 14px;
-    font-family: 'Courier New', Courier, monospace;
-    box-sizing: border-box;
-    transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-.editor textarea:last-child {
-    border-right: none;
+    display: none; /* Initially hidden */
 }
 
 .copy-button {
     position: absolute;
     top: 10px;
-    right: 60px; /* Adjusted to move the button left */
+    right: 10px;
     background-color: #007BFF;
     border: none;
-    padding: 12px 24px; /* Increased padding for larger button */
+    padding: 8px 12px;
     color: white;
     cursor: pointer;
     border-radius: 4px;
     transition: background-color 0.3s ease;
-    font-size: 16px; /* Increased font size for larger button */
+    font-size: 14px;
+    z-index: 1; /* Ensure the button stays on top of other elements */
 }
 
 .copy-button:hover {
@@ -158,7 +138,7 @@ body {
 
 #output-message {
     width: 100%;
-    height: 150px;
+    height: 100px;
     padding: 20px;
     border-top: 1px solid #ddd;
     box-sizing: border-box;

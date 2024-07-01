@@ -159,7 +159,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function abbreviateJournal(journal) {
         const abbreviation = journalAbbreviations[journal];
-        console.log(`Journal: ${journal}, Abbreviation: ${abbreviation}`);
         return abbreviation || journal;
     }
 
@@ -168,11 +167,14 @@ document.addEventListener('DOMContentLoaded', () => {
         textAreas.forEach(textArea => {
             const content = textArea.value;
             const highlightedContent = highlightBibtex(content);
-            const highlightedDiv = document.createElement('div');
-            highlightedDiv.className = 'highlighted-content';
-            highlightedDiv.innerHTML = highlightedContent;
-            textArea.style.display = 'none';
-            textArea.parentNode.insertBefore(highlightedDiv, textArea.nextSibling);
+            const highlightedDiv = textArea.nextElementSibling;
+            if (highlightedDiv) {
+                highlightedDiv.innerHTML = highlightedContent;
+            }
         });
     }
+
+    // 添加事件监听器以实时高亮
+    textLeft.addEventListener('input', applyHighlighting);
+    textRight.addEventListener('input', applyHighlighting);
 });
