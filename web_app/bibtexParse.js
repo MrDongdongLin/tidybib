@@ -189,14 +189,14 @@
 
         this.key_equals_value = function() {
             var key = this.key();
+            console.log("Parsed key: " + key);  // Added logging
             if (this.tryMatch("=")) {
                 this.match("=");
                 var val = this.value();
                 key = key.trim();
                 return [ key, val ];
             } else {
-                throw TypeError("Value expected, equals sign missing: key_equals_value",
-                     this.input.substring(this.pos));
+                throw TypeError("Value expected, equals sign missing: key_equals_value", this.input.substring(this.pos));
             }
         };
 

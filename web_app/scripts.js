@@ -14,6 +14,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
     console.log('Loaded journal abbreviations:', journalAbbreviations);
 
+    // Set initial content
+    const initialInputContent = `@inproceedings{ WOS:000766209400010,
+Author = {Li, Yue and Abady, Lydia and Wang, Hongxia and Barni, Mauro},
+Editor = {Zhao, X and Piva, A and ComesanaAlfaro, P},
+Title = {A Feature-Map-Based Large-Payload DNN Watermarking Algorithm},
+Booktitle = {DIGITAL FORENSICS AND WATERMARKING, IWDW 2021},
+Series = {Lecture Notes in Computer Science},
+Year = {2022},
+Volume = {13180},
+Pages = {135-148},
+Note = {20th International Workshop on Digital-Forensics and Watermarking
+   (IWDW), Beijing, PEOPLES R CHINA, NOV 20-22, 2021},
+Organization = {Chinese Acad Sci, Inst Informat Engn, State Key Lab Informat Secur; New
+   Jersey Institute of Technology; Springer},
+DOI = {10.1007/978-3-030-95398-0\\_10},
+ISSN = {0302-9743},
+EISSN = {1611-3349},
+ISBN = {978-3-030-95398-0; 978-3-030-95397-3},
+Unique-ID = {WOS:000766209400010},
+}`;
+    const initialOutputContent = `@inproceedings{WOS:000766209400010,
+  author =       {Li, Yue and Abady, Lydia and Wang, Hongxia and Barni, Mauro},
+  title =        {A feature-map-based large-payload dnn watermarking algorithm},
+  booktitle =    {Digital Forensics and Watermarking, Iwdw 2021},
+  year =         {2022},
+  editor =       {Zhao, X and Piva, A and ComesanaAlfaro, P},
+  volume =       {13180},
+  series =       {Lecture Notes in Computer Science},
+  pages =        {135-148},
+  doi =          {10.1007/978-3-030-95398-0\\_10},
+}`;
+
+    textLeft.value = initialInputContent;
+    textRight.value = initialOutputContent;
+    applyHighlighting(); // Apply initial highlighting
+
     browseButton.addEventListener('click', () => {
         fileInput.click();
     });
@@ -25,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const reader = new FileReader();
             reader.onload = (e) => {
                 textLeft.value = e.target.result;
-                applyHighlighting(); // 应用高亮显示
+                applyHighlighting(); // Apply highlighting
                 outputMessage.value = `Loaded file: ${file.name}\n`;
             };
             reader.readAsText(file);
@@ -38,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("Original Content:", content);
             const simplifiedContent = simplifyBib(content, applyAbbreviation.checked);
             textRight.value = simplifiedContent;
-            applyHighlighting(); // 应用高亮显示
+            applyHighlighting(); // Apply highlighting
             outputMessage.value += 'Tidied content.\n';
         } catch (e) {
             console.error(`Failed to tidy content: ${e.message}`);
@@ -174,7 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 添加事件监听器以实时高亮
+    // Add event listeners for real-time highlighting
     textLeft.addEventListener('input', applyHighlighting);
     textRight.addEventListener('input', applyHighlighting);
 });

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TidyBib4You</title>
+    <title>BibTidy: Bibliography Formatter</title>
     <link rel="stylesheet" href="styles.css">
     <script src="abbreviatelist.js"></script>
     <script src="bibtexParse.js"></script>
@@ -11,6 +11,9 @@
     <script src="scripts.js"></script>
 </head>
 <body>
+    <div class="header">
+        <h1>BibTidy: Bibliography Formatter</h1>
+    </div>
     <div class="container">
         <div class="button-bar">
             <input type="file" id="file-input" style="display: none;">
@@ -26,11 +29,13 @@
         </div>
         <div class="editor">
             <div class="textarea-container">
+                <label for="text-left" class="textarea-label">Input BibTeX</label>
                 <textarea id="text-left" class="highlight-bibtex" placeholder="Input BibTeX here..."></textarea>
                 <div class="highlighted-content" id="highlighted-left"></div>
                 <button class="copy-button" data-target="text-left">Copy</button>
             </div>
             <div class="textarea-container">
+                <label for="text-right" class="textarea-label">Formatted Output</label>
                 <textarea id="text-right" class="highlight-bibtex" placeholder="Output will appear here..."></textarea>
                 <div class="highlighted-content" id="highlighted-right"></div>
                 <button class="copy-button" data-target="text-right">Copy</button>
