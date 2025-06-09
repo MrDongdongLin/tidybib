@@ -25,29 +25,52 @@ class TidyBibApp:
 
         # Configuration constants
         self.CONSTANT_FIELDS = ['ENTRYTYPE', 'ID']
-        self.FIELD_ORDER = [
-            'author', 'title', 'journal', 'booktitle', 'year', 'volume',
-            'number', 'pages', 'month', 'note', 'abstract', 'keywords', 
-            'source', 'doi'
-        ]
-        self.fields = list(set(self.CONSTANT_FIELDS + self.FIELD_ORDER))
         
-        # Text processing constants
-        self.PREPOSITIONS = {
-            'of', 'the', 'and', 'in', 'on', 'for', 'with', 'a', 'an', 
-            'by', 'at', 'to', 'from', 'into', 'through'
+        # Define field orders for different entry types based on regs.py
+        self.FIELD_ORDERS = {
+            'article': [
+                'author', 'title', 'journal', 'year', 'volume', 'number', 'pages', 'doi'
+            ],
+            'inproceedings': [
+                'author', 'title', 'booktitle', 'year', 'volume', 'number', 
+                'series', 'pages', 'doi'
+            ],
+            'proceedings': [
+                'title', 'year', 'volume', 'number', 'series', 
+                'organization', 'address', 'month'
+            ],
+            'misc': [
+                'author', 'title', 'howpublished', 'year', 'month'
+            ],
+            'book': [
+                'author', 'title', 'year', 'edition', 'address', 'doi'
+            ],
+            'incollection': [
+                'author', 'title', 'booktitle', 'pages', 'year'
+            ]
         }
         
-        # Special words and organizations that should maintain specific capitalization
+        # All possible fields (for filtering)
+        all_fields = set()
+        for field_list in self.FIELD_ORDERS.values():
+            all_fields.update(field_list)
+        
+        self.fields = list(set(self.CONSTANT_FIELDS + list(all_fields)))
+        
+        # Common prepositions that should be lowercase in titles
+        self.PREPOSITIONS = {
+            'a', 'an', 'and', 'as', 'at', 'but', 'by', 'for', 'in', 'of', 'on', 
+            'or', 'the', 'to', 'up', 'via', 'with', 'from', 'into', 'onto', 'upon',
+            'over'
+            # , 'under', 'above', 'below', 'across', 'through', 'during', 'before',
+            # 'after', 'until', 'since', 'while', 'within', 'without', 'between', 'among'
+        }
+        
+        # Special words that should maintain specific capitalization
         self.SPECIAL_WORDS = {
-            # Technology terms
-            'IEEE', 'ACM', 'AI', 'ML', 'IoT', 'API', 'GPU', 'CPU', 'HTTP', 'HTTPS',
-            'XML', 'JSON', 'SQL', 'NoSQL', 'REST', 'SOAP', 'TCP', 'UDP', 'IP',
-            'IEEE/CVF', 'IEEE/CVF', 'CVF', 'IEEE CVF',
-            # Publishers and organizations
-            'Springer', 'Elsevier', 'Wiley', 'Nature', 'Science', 'MIT', 'ACL',
-            'AAAI', 'IJCAI', 'NIPS', 'ICML', 'ICLR', 'CVPR', 'ICCV', 'ECCV',
-            'SIGKDD', 'SIGMOD', 'SIGCOMM', 'SIGCHI', 'SIGGRAPH'
+            'IEEE', 'ACM', 'CVF', 'IEEE/CVF', 'SIGKDD', 'SIGMOD', 'SIGCOMM', 
+            'SIGCHI', 'SIGGRAPH', 'SIGSAC', 'AAAI', 'IJCAI', 'NIPS', 'ICML', 
+            'ICLR', 'CVPR', 'ICCV', 'ECCV', 'MIT', 'LSTM', 'GNN', 'CNN', 'RNN'
         }
         
         # Organization abbreviations that should be corrected to uppercase
@@ -124,29 +147,175 @@ class TidyBibApp:
             'keyword': re.compile(r"@\w+\{"),
             'braces': re.compile(r"[{}]"),
             'equal_sign': re.compile(r"="),
-            'field': re.compile(r"\b(?:" + "|".join(self.FIELD_ORDER) + r")\b"),
+            'field': re.compile(r"\b(?:" + "|".join(self.fields) + r")\b"),
             'value': re.compile(r"\{[^{}]*\}")
         }
 
     def _load_journal_abbreviations(self):
-        """Load journal abbreviations from JSON file"""
-        abbreviations = {}
-        try:
-            import os
-            import json
-            json_file_path = os.path.join(os.path.dirname(__file__), 'abbreviatelist.json')
+        """Load journal abbreviations from embedded dictionary"""
+        abbreviations = {
+            "ieee transactions on pattern analysis and machine intelligence": "IEEE Trans. Pattern Anal. Mach. Intell.",
+            "acm transactions on knowledge discovery from data": "ACM Trans. Knowl. Discovery Data",
+            "ieee internet of things journal": "IEEE Internet Things J.",
+            "ieee transactions on knowledge and data engineering": "IEEE Trans. Knowl. Data Eng.",
+            "ieee transactions on industrial informatics": "IEEE Trans. Ind. Inf.",
+            "information fusion": "Inf. Fusion",
+            "ieee transactions on instrumentation and measurement": "IEEE Trans. Instrum. Meas.",
+            "neural networks": "Neural Networks",
+            "ieee transactions on neural networks and learning systems": "IEEE Trans. Neural Networks Learn. Syst.",
+            "knowledge-based systems": "Knowl.-Based Syst.",
+            "reliability engineering & system safety": "Reliab. Eng. Syst. Saf.",
+            "neurocomputing": "Neurocomputing",
+            "ieee transactions on information forensics and security": "IEEE Trans. Inf. Forensics Secur.",
+            "ieee transactions on consumer electronics": "IEEE Trans. Consum. Electron.",
+            "information sciences": "Inf. Sci.",
+            "information systems": "Inf. Syst.",
+            "pattern recognition": "Pattern Recognit.",
+            "future generation computer systems": "Future Gener. Comput. Syst.",
+            "ieee transactions on emerging topics in computing": "IEEE Trans. Emerg. Top. Comput.",
+            "renewable energy": "Renewable Energy",
+            "computers & security": "Comput. Secur.",
+            "ieee transactions on neural networks": "IEEE Trans. Neural Networks",
+            "artificial intelligence review": "Artif. Intell. Rev.",
+            "international conference on learning representations": "ICLR",
+            "advances in neural information processing systems": "Adv. Neural Inf. Process. Syst.",
+            "ieee transactions on intelligent transportation systems": "IEEE Trans. Intell. Transp. Syst.",
+            "ieee transactions on industrial electronics": "IEEE Trans. Ind. Electron.",
+            "computer engineering and applications": "Comput. Eng. Appl.",
+            "alexandria engineering journal": "Alexandria Eng. J.",
+            "journal of beijing university of posts and telecommunications": "J. Beijing Univ. Posts Telecommun.",
+            "advanced engineering informatics": "Adv. Eng. Inf.",
             
-            if os.path.exists(json_file_path):
-                with open(json_file_path, 'r', encoding='utf-8') as file:
-                    data = json.load(file)
-                    # Convert to lowercase keys for case-insensitive matching
-                    for full_name, abbrev in data.items():
-                        abbreviations[full_name.lower()] = abbrev
-                                    
-        except Exception as e:
-            self.output_message.insert(tk.END, f"⚠ Could not load journal abbreviations: {str(e)}\n")
-            
+            # 添加更多来自 JSON 文件的常用期刊缩写
+            "aims medical science": "AIMS Med. Sci.",
+            "cancer gene therapy": "Cancer Gene Ther.",
+            "emerging topics in life sciences": "Emerging Top. Life Sci.",
+            "proceedings of the american society of agronomy": "Proc. Am. Soc. Agron.",
+            "proceedings of the institution of mechanical engineers, part g: journal of aerospace engineering": "Proc. Inst. Mech. Eng., Part G: J. Aerosp. Eng.",
+            "russian journal of numerical analysis and mathematical modelling": "Russ. J. Numer. Anal. Math. Model.",
+            "2d materials": "2D Mater.",
+            "3 biotech": "3 Biotech",
+            "3d printing and additive manufacturing": "3D Print. Addit. Manuf.",
+            "3d printing in medicine": "3D Print. Med.",
+            "astronomy and astrophysics": "Astron. Astrophys.",
+            "aapg bulletin": "AAPG Bull.",
+            "aapg memoir": "AAPG Mem.",
+            "aapps bulletin": "AAPPS Bull.",
+            "aaps journal": "AAPS J.",
+            "aaps open": "AAPS Open",
+            "aatcc journal of research": "AATCC J. Res.",
+            "aatcc review": "AATCC Rev.",
+            "abb review": "ABB Rev.",
+            "abstract and applied analysis": "Abstr. Appl. Anal.",
+            "aca transactions": "ACA Trans.",
+            "academic forensic pathology": "Acad. Forensic Pathol.",
+            "academic radiology": "Acad. Radiol.",
+            "accounts of chemical research": "Acc. Chem. Res.",
+            "accounts of materials research": "Acc. Mater. Res.",
+            "access microbiology": "Access Microbiol.",
+            "accident analysis and prevention": "Accid. Anal. Prev.",
+            "accountability in research": "Account. Res.",
+            "accreditation and quality assurance": "Accredit. Qual. Assur.",
+            "ach - models in chemistry": "ACH - Models Chem.",
+            "achievements in the life sciences": "Achiev. Life Sci.",
+            "aci materials journal": "ACI Mater. J.",
+            "aci structural journal": "ACI Struct. J.",
+            "acm communications in computer algebra": "ACM Commun. Comput. Algebra",
+            "acm computing surveys": "ACM Comput. Surv.",
+            "acm digital threats: research and practice": "ACM Digital Threats: Res. Pract.",
+            "acm inroads": "ACM Inroads",
+            "acm journal on autonomous transportation systems": "ACM J. Auton. Transp. Syst.",
+            "acm journal on computing and cultural heritage": "ACM J. Comput. Cult. Heritage",
+            "acm journal on computing and sustainable societies": "ACM J. Comput. Sustainable Soc.",
+            "acm journal of data and information quality": "ACM J. Data Inf. Qual.",
+            "acm journal on emerging technologies in computing": "ACM J. Emerging Technol. Comput.",
+            "acm journal on emerging technologies in computing systems": "ACM J. Emerging Technol. Comput. Syst.",
+            "acm journal of experimental algorithmics": "ACM J. Exp. Algorithmics",
+            "acm journal on responsible computing": "ACM J. Responsible Comput.",
+            "acm queue": "ACM Queue",
+            "acm transactions on accessible computing": "ACM Trans. Accessible Comput.",
+            "acm transactions on algorithms": "ACM Trans. Algorithms",
+            "acm transactions on applied perception": "ACM Trans. Appl. Percept.",
+            "acm transactions on architecture and code optimization": "ACM Trans. Archit. Code Optim.",
+            "acm transactions on asian language information processing": "ACM Trans. Asian Lang. Inf. Process.",
+            "acm transactions on asian and low-resource language information processing": "ACM Trans. Asian Low-Resour. Lang. Inf. Process.",
+            "acm transactions on autonomous and adaptive systems": "ACM Trans. Auton. Adapt. Syst.",
+            "acm transactions on computing education": "ACM Trans. Comput. Educ.",
+            "acm transactions on computing for healthcare": "ACM Trans. Comput. Healthcare",
+            "acm transactions on computational logic": "ACM Trans. Comput. Log.",
+            "acm transactions on computer systems": "ACM Trans. Comput. Syst.",
+            "acm transactions on computation theory": "ACM Trans. Comput. Theory",
+            "acm transactions on computer-human interaction": "ACM Trans. Comput.-Hum. Interact.",
+            "acm transactions on cyber-physical systems": "ACM Trans. Cyber-Phys. Syst.",
+            "acm transactions on database systems": "ACM Trans. Database Syst.",
+            "acm transactions on design automation of electronic systems": "ACM Trans. Des. Autom. Electron. Syst.",
+            "acm transactions on economics and computation": "ACM Trans. Econ. Comput.",
+            "acm transactions on embedded computing systems": "ACM Trans. Embedded Comput. Syst.",
+            "acm transactions on evolutionary learning": "ACM Trans. Evol. Learn.",
+            "acm transactions on evolutionary learning and optimization": "ACM Trans. Evol. Learn. Optim.",
+            "acm transactions on graphics": "ACM Trans. Graphics",
+            "acm transactions on human-robot interaction": "ACM Trans. Hum.-Rob. Interact.",
+            "acm transactions on information systems": "ACM Trans. Inf. Syst.",
+            "acm transactions on information and system security": "ACM Trans. Inf. Syst. Secur.",
+            "acm transactions on intelligent systems and technology": "ACM Trans. Intell. Syst. Technol.",
+            "acm transactions on interactive intelligent systems": "ACM Trans. Interact. Intell. Syst.",
+            "acm transactions on internet technology": "ACM Trans. Internet Technol.",
+            "acm transactions on internet of things": "ACM Trans. Internet Things",
+            "acm transactions on management information systems": "ACM Trans. Manage. Inf. Syst.",
+            "acm transactions on mathematical software": "ACM Trans. Math. Software",
+            "acm transactions on modeling and computer simulation": "ACM Trans. Model. Comput. Simul.",
+            "acm transactions on modeling and performance evaluation of computing systems": "ACM Trans. Model. Perform. Eval. Comput. Syst.",
+            "acm transactions on multimedia computing communications and applications": "ACM Trans. Multimedia Comput. Commun. Appl.",
+            "acm transactions on parallel computing": "ACM Trans. Parallel Comput.",
+            "acm transactions on privacy and security": "ACM Trans. Privacy Secur.",
+            "acm transactions on probabilistic machine learning": "ACM Trans. Probab. Mach. Learn.",
+            "acm transactions on programming languages and systems": "ACM Trans. Program. Lang. Syst.",
+            "acm transactions on quantum computing": "ACM Trans. Quantum Comput.",
+            "acm transactions on recommender systems": "ACM Trans. Recommender Syst.",
+            "acm transactions on reconfigurable technology and systems": "ACM Trans. Reconfigurable Technol. Syst.",
+            "acm transactions on sensor networks": "ACM Trans. Sens. Netw.",
+            "acm transactions on social computing": "ACM Trans. Social Comput.",
+            "acm transactions on software engineering and methodology": "ACM Trans. Software Eng. Methodol.",
+            "acm transactions on spatial algorithms and systems": "ACM Trans. Spatial Algorithms Syst.",
+            "acm transactions on speech and language processing": "ACM Trans. Speech Lang. Process.",
+            "acm transactions on storage": "ACM Trans. Storage",
+            "acm transactions on the web": "ACM Trans. Web",
+        }
+        
         return abbreviations
+
+    def _get_journal_abbreviation(self, journal_name):
+        """Get journal abbreviation from the loaded list"""
+        if not journal_name or not self.journal_abbreviations:
+            return None
+            
+        # Clean the journal name
+        journal_clean = journal_name.strip()
+        journal_lower = journal_clean.lower()
+        
+        # Try exact match (case-insensitive)
+        if journal_lower in self.journal_abbreviations:
+            return self.journal_abbreviations[journal_lower]
+        
+        # Try exact match without punctuation
+        journal_no_punct = re.sub(r'[^\w\s]', '', journal_lower).strip()
+        journal_no_punct = ' '.join(journal_no_punct.split())  # Normalize spaces
+        
+        for full_name, abbrev in self.journal_abbreviations.items():
+            full_name_no_punct = re.sub(r'[^\w\s]', '', full_name).strip()
+            full_name_no_punct = ' '.join(full_name_no_punct.split())
+            
+            if journal_no_punct == full_name_no_punct:
+                return abbrev
+        
+        # Try partial matches
+        for full_name, abbrev in self.journal_abbreviations.items():
+            if len(full_name) > 10 and full_name in journal_lower:
+                return abbrev
+            if len(journal_lower) > 10 and journal_lower in full_name:
+                return abbrev
+        
+        return None
 
     def _init_ui(self):
         """Initialize user interface"""
@@ -468,35 +637,108 @@ class TidyBibApp:
 
         # First apply organization corrections
         corrected_title = self._correct_organizations(title)
+        
+        # For journal/booktitle, use Title Case; for titles, use sentence case
+        if is_booktitle:
+            return self._apply_title_case(corrected_title)
+        else:
+            return self._apply_sentence_case(corrected_title)
 
-        def capitalize_word(word, is_first_word=False):
+    def _apply_sentence_case(self, text):
+        """Apply sentence case: only first letter capitalized, technical terms in uppercase with braces"""
+        if not text:
+            return text
+        
+        # Technical abbreviations that should be uppercase and protected with braces
+        TECHNICAL_TERMS = {
+            'CNN', 'RNN', 'IoT', 'GAN', 'LSTM', '5G', 'DoH', 'DNA', 'TCP/IP', 'RSA', 
+            'AI', 'GPU', 'NLP', 'IEEE', 'ACM', 'CVF', 'SIGKDD', 'SIGMOD', 'SIGCOMM',
+            'SIGCHI', 'SIGGRAPH', 'SIGSAC', 'AAAI', 'IJCAI', 'NIPS', 'ICML', 'ICLR',
+            'CVPR', 'ICCV', 'ECCV', 'MIT', 'HTTP', 'HTTPS', 'URL', 'API', 'JSON',
+            'XML', 'HTML', 'CSS', 'SQL', 'NoSQL', 'REST', 'SOAP', 'UDP', 'IP',
+            'MAC', 'WiFi', 'IoT', 'AR', 'VR', 'ML', 'DL', 'RL', 'GNN'
+        }
+        
+        words = text.split()
+        if not words:
+            return text
+        
+        result_words = []
+        
+        for i, word in enumerate(words):
             # Skip words already in braces (protected)
             if word.startswith('{') and word.endswith('}'):
-                return word
+                result_words.append(word)
+                continue
             
-            # Check if word is a special word that should maintain specific capitalization
-            if word in self.SPECIAL_WORDS or word.upper() in self.SPECIAL_WORDS:
-                return word.upper()
+            # Clean word for comparison (remove punctuation)
+            clean_word = re.sub(r'[^\w/]', '', word)
             
-            # Check if word is a preposition (should be lowercase except at beginning)
-            if word.lower() in self.PREPOSITIONS and not is_booktitle and not is_first_word:
-                return word.lower()
-            
-            # Default capitalization
-            return word.capitalize()
+            # Check if it's a technical term
+            if clean_word.upper() in TECHNICAL_TERMS:
+                # Protect technical terms with braces and preserve original punctuation
+                protected_word = word.replace(clean_word, '{' + clean_word.upper() + '}')
+                result_words.append(protected_word)
+            elif i == 0:
+                # First word: capitalize first letter
+                result_words.append(word.capitalize())
+            elif ':' in words[i-1] if i > 0 else False:
+                # Word after colon: capitalize first letter
+                result_words.append(word.capitalize())
+            else:
+                # Other words: lowercase
+                result_words.append(word.lower())
+        
+        return ' '.join(result_words)
 
-        words = corrected_title.split()
+    def _apply_title_case(self, text):
+        """Apply Title Case for journal names and booktitles"""
+        if not text:
+            return text
+        
+        # Words that should be lowercase in Title Case (except at beginning/end)
+        LOWERCASE_WORDS = {
+            'a', 'an', 'the',  # articles
+            'in', 'on', 'at', 'to', 'for', 'by', 'of', 'with', 'from',  # short prepositions
+            'and', 'but', 'or', 'nor'  # short conjunctions
+        }
+        
+        # Technical terms that must remain uppercase
+        UPPERCASE_TERMS = {
+            'IEEE', 'ACM', 'CVF', 'SIGKDD', 'SIGMOD', 'SIGCOMM', 'SIGCHI', 
+            'SIGGRAPH', 'SIGSAC', 'AAAI', 'IJCAI', 'NIPS', 'ICML', 'ICLR',
+            'CVPR', 'ICCV', 'ECCV', 'MIT', 'AI', 'ML', 'IoT', 'API'
+        }
+        
+        words = text.split()
         if not words:
-            return corrected_title
+            return text
         
-        # Capitalize first word regardless of preposition rules
-        capitalized_words = [capitalize_word(words[0], is_first_word=True)]
+        result_words = []
         
-        # Process remaining words
-        for word in words[1:]:
-            capitalized_words.append(capitalize_word(word))
+        for i, word in enumerate(words):
+            # Skip words already in braces (protected)
+            if word.startswith('{') and word.endswith('}'):
+                result_words.append(word)
+                continue
+            
+            # Clean word for comparison (remove punctuation)
+            clean_word = re.sub(r'[^\w]', '', word)
+            is_first_or_last = (i == 0 or i == len(words) - 1)
+            
+            # Check if it's a technical term that should be uppercase
+            if clean_word.upper() in UPPERCASE_TERMS:
+                # Keep technical terms uppercase
+                uppercase_word = word.replace(clean_word, clean_word.upper())
+                result_words.append(uppercase_word)
+            elif not is_first_or_last and clean_word.lower() in LOWERCASE_WORDS and len(clean_word) <= 4:
+                # Keep short words lowercase (except at beginning/end)
+                result_words.append(word.lower())
+            else:
+                # Capitalize other words
+                result_words.append(word.capitalize())
         
-        return ' '.join(capitalized_words)
+        return ' '.join(result_words)
 
     def _correct_organizations(self, text):
         """Correct organization names and abbreviations"""
@@ -516,45 +758,6 @@ class TidyBibApp:
         
         return corrected_text
 
-    def _get_journal_abbreviation(self, journal_name):
-        """Get journal abbreviation from the loaded list"""
-        if not journal_name or not self.journal_abbreviations:
-            return None
-            
-        # Clean the journal name
-        journal_clean = journal_name.strip()
-        journal_lower = journal_clean.lower()
-        
-        # Try exact match (case-insensitive)
-        if journal_lower in self.journal_abbreviations:
-            return self.journal_abbreviations[journal_lower]
-        
-        # Try exact match without punctuation
-        journal_no_punct = re.sub(r'[^\w\s]', '', journal_lower).strip()
-        for full_name, abbrev in self.journal_abbreviations.items():
-            full_name_no_punct = re.sub(r'[^\w\s]', '', full_name).strip()
-            if journal_no_punct == full_name_no_punct:
-                return abbrev
-        
-        # Try partial matches (journal name contains full name or vice versa)
-        for full_name, abbrev in self.journal_abbreviations.items():
-            # Check if the journal name contains the full name from dictionary
-            if len(full_name) > 3 and full_name in journal_lower:
-                return abbrev
-            # Check if the full name from dictionary contains the journal name
-            if len(journal_lower) > 3 and journal_lower in full_name:
-                return abbrev
-        
-        # Try word-by-word matching for better accuracy
-        journal_words = set(journal_lower.split())
-        for full_name, abbrev in self.journal_abbreviations.items():
-            full_name_words = set(full_name.split())
-            # If most words match, consider it a match
-            if len(journal_words & full_name_words) >= min(len(journal_words), len(full_name_words)) * 0.7:
-                return abbrev
-                
-        return None
-
     def _process_journal_name(self, journal_name):
         """Process journal name based on user preferences"""
         if not journal_name:
@@ -566,15 +769,12 @@ class TidyBibApp:
             if abbreviated:
                 # Apply organization corrections to the abbreviated form
                 corrected_abbreviated = self._correct_organizations(abbreviated)
-                # Add debug information
-                self.output_message.insert(tk.END, f"📝 '{journal_name}' → '{corrected_abbreviated}'\n")
                 return corrected_abbreviated
             else:
-                # If no abbreviation found, apply organization corrections then capitalization
+                # If no abbreviation found, apply organization corrections then Title Case
                 corrected_name = self._correct_organizations(journal_name)
-                capitalized_name = self._capitalize_title(corrected_name)
-                self.output_message.insert(tk.END, f"⚠ No abbreviation found for: '{journal_name}'\n")
-                return capitalized_name
+                title_cased_name = self._apply_title_case(corrected_name)
+                return title_cased_name
         else:
             # Use full form - find full name from abbreviation first
             full_name = self._get_full_journal_name(journal_name)
@@ -583,10 +783,10 @@ class TidyBibApp:
                 corrected_full_name = self._correct_organizations(full_name)
                 return corrected_full_name
             else:
-                # If no full name found, apply organization corrections then capitalization
+                # If no full name found, apply organization corrections then Title Case
                 corrected_name = self._correct_organizations(journal_name)
-                capitalized_name = self._capitalize_title(corrected_name)
-                return capitalized_name
+                title_cased_name = self._apply_title_case(corrected_name)
+                return title_cased_name
 
     def _get_full_journal_name(self, journal_name):
         """Get full journal name from abbreviation"""
@@ -632,13 +832,10 @@ class TidyBibApp:
                 parser.ignore_nonstandard_types = False
                 self.bib_database = bibtexparser.loads(content, parser=parser)
                 
-            self.output_message.insert(tk.END, f"✓ Loaded file: {file_path}\n")
             self._schedule_highlight_syntax(None)
             
         except Exception as e:
-            error_msg = f"✗ Failed to load file: {file_path}\n  Error: {str(e)}\n"
             messagebox.showerror("Error", f"Failed to load file: {str(e)}")
-            self.output_message.insert(tk.END, error_msg)
 
     def save_file(self):
         """Save tidied BibTeX content to file"""
@@ -656,19 +853,14 @@ class TidyBibApp:
                 content = self.text_right.get("1.0", tk.END)
                 file.write(content)
             
-            self.output_message.insert(tk.END, f"✓ Saved file: {file_path}\n")
-            
         except Exception as e:
-            error_msg = f"✗ Failed to save file: {file_path}\n  Error: {str(e)}\n"
             messagebox.showerror("Error", f"Failed to save file: {str(e)}")
-            self.output_message.insert(tk.END, error_msg)
 
     def tidy(self):
         """Process and tidy the BibTeX content"""
         try:
             content = self.text_left.get("1.0", tk.END).strip()
             if not content:
-                self.output_message.insert(tk.END, "⚠ No content to process\n")
                 return
 
             # Parse content
@@ -683,43 +875,77 @@ class TidyBibApp:
             self.text_right.delete("1.0", tk.END)
             self.text_right.insert(tk.END, simplified_content)
             
-            self._display_processing_stats()
             self._schedule_highlight_syntax(None)
             
         except Exception as e:
-            error_msg = f"✗ Failed to tidy content: {str(e)}\n"
             messagebox.showerror("Error", f"Failed to tidy content: {str(e)}")
-            self.output_message.insert(tk.END, error_msg)
 
     def _simplify_bib(self):
         """Simplify and format bibliography entries"""
         if not self.bib_database or not self.bib_database.entries:
             return ""
 
+        # 统计信息
+        total_entries = len(self.bib_database.entries)
+        journal_abbreviations_applied = 0
+        entry_types = {}
+
         for entry in self.bib_database.entries:
             original_id = entry.get('ID', '')
+            entry_type = entry.get('ENTRYTYPE', 'unknown').lower()
+            
+            # 统计条目类型
+            entry_types[entry_type] = entry_types.get(entry_type, 0) + 1
             
             # Remove unwanted fields
             fields_to_remove = [field for field in entry.keys() if field not in self.fields]
             for field in fields_to_remove:
                 del entry[field]
             
-            # Process journal names with abbreviation support
+            # Process journal names with Title Case
             if 'journal' in entry:
-                entry['journal'] = self._process_journal_name(entry['journal'])
+                original_journal = entry['journal']
+                processed_journal = self._process_journal_name(entry['journal'])
+                entry['journal'] = processed_journal
+                
+                # 检查是否应用了缩写（只统计，不输出详细信息）
+                if self.journal_format_var.get() == "abbreviated":
+                    abbreviated = self._get_journal_abbreviation(original_journal)
+                    if abbreviated:
+                        journal_abbreviations_applied += 1
             
-            # Process other title fields
-            other_title_fields = ['title', 'booktitle', 'publisher']
-            for title_field in other_title_fields:
-                if title_field in entry:
-                    is_booktitle = (title_field == 'booktitle')
-                    entry[title_field] = self._capitalize_title(entry[title_field], is_booktitle=is_booktitle)
+            # Process booktitle with Title Case (since it's typically a conference/journal name)
+            if 'booktitle' in entry:
+                entry['booktitle'] = self._process_journal_name(entry['booktitle'])
+            
+            # Process title with sentence case
+            if 'title' in entry:
+                entry['title'] = self._apply_sentence_case(entry['title'])
+            
+            # Process publisher with Title Case
+            if 'publisher' in entry:
+                entry['publisher'] = self._apply_title_case(entry['publisher'])
 
             # Handle citation key modification
             if self.modify_citation_key_var.get() == "modify":
                 entry['ID'] = self._generate_citation_key(entry)
             else:
                 entry['ID'] = original_id
+
+        # 显示统计信息
+        self.output_message.insert(tk.END, f"✓ Tidied {total_entries} entries successfully\n")
+        self.output_message.insert(tk.END, f"📖 Journal abbreviations applied: {journal_abbreviations_applied}\n")
+        
+        # 显示条目类型统计
+        if entry_types:
+            self.output_message.insert(tk.END, f"📊 Entry types processed:\n")
+            for entry_type, count in sorted(entry_types.items()):
+                self.output_message.insert(tk.END, f"   - {entry_type}: {count}\n")
+        
+        # 添加分割线
+        self.output_message.insert(tk.END, f"{'='*50}\n")
+        
+        self.output_message.see(tk.END)
 
         return self._format_entries()
 
@@ -743,57 +969,27 @@ class TidyBibApp:
         content_parts = []
         
         for entry in self.bib_database.entries:
-            entry_type = entry.get('ENTRYTYPE', 'article')
+            entry_type = entry.get('ENTRYTYPE', 'article').lower()
             entry_id = entry.get('ID', 'unknown')
             
             entry_lines = [f"@{entry_type}{{{entry_id},"]
             
-            # Add fields in specified order
-            for field in self.FIELD_ORDER:
+            # Get field order for this entry type
+            field_order = self.FIELD_ORDERS.get(entry_type, self.FIELD_ORDERS['article'])
+            
+            # Add fields in specified order for this entry type
+            for field in field_order:
                 if field in entry and entry[field]:
+                    # Field has content
                     entry_lines.append(f"  {field:<12} = {{{entry[field]}}},")
+                else:
+                    # Field is empty, add empty braces
+                    entry_lines.append(f"  {field:<12} = {{}},")
             
             entry_lines.append("}")
             content_parts.append('\n'.join(entry_lines))
         
         return '\n\n'.join(content_parts) + '\n\n'
-
-    def _display_processing_stats(self):
-        """Display processing statistics"""
-        if not self.bib_database or not self.bib_database.entries:
-            self.output_message.insert(tk.END, "⚠ No entries found to process\n")
-            return
-        
-        # Count statistics
-        total_entries = len(self.bib_database.entries)
-        entry_types = {}
-        journal_conversions = 0
-        
-        for entry in self.bib_database.entries:
-            entry_type = entry.get('ENTRYTYPE', 'unknown').lower()
-            entry_types[entry_type] = entry_types.get(entry_type, 0) + 1
-            
-            # Count journal conversions if in abbreviated mode
-            if 'journal' in entry and self.journal_format_var.get() == "abbreviated":
-                original_journal = entry['journal']
-                if self._get_journal_abbreviation(original_journal):
-                    journal_conversions += 1
-        
-        # Display results
-        self.output_message.insert(tk.END, f"✓ Tidied {total_entries} entries successfully\n")
-        
-        if self.journal_format_var.get() == "abbreviated":
-            self.output_message.insert(tk.END, f"📖 Journal abbreviations applied: {journal_conversions}\n")
-        
-        self.output_message.insert(tk.END, "📊 Entry types breakdown:\n")
-        
-        # Sort by count (descending)
-        sorted_types = sorted(entry_types.items(), key=lambda x: x[1], reverse=True)
-        
-        for entry_type, count in sorted_types:
-            self.output_message.insert(tk.END, f"   • {entry_type}: {count}\n")
-        
-        self.output_message.insert(tk.END, "─" * 50 + "\n")
 
     def clear_output(self):
         """Clear the output message area"""
@@ -870,10 +1066,6 @@ class TidyBibApp:
                 widget.see(first_match)
                 widget.mark_set(tk.INSERT, first_match)
         
-        # Update status (you could add a status label if needed)
-        status = f"Found {count} occurrence{'s' if count != 1 else ''}"
-        self.output_message.insert(tk.END, f"🔍 {status} of '{search_term}'\n")
-
     def _clear_find_highlights(self, widget):
         """Clear find highlights from widget"""
         widget.tag_remove('found', '1.0', tk.END)
